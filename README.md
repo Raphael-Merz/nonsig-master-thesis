@@ -35,7 +35,7 @@ results/           # Model outputs, plots, tables
 ## 📄 License
 
 - 📄 Code and documentation: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-- 📊 Data: Reused under fair use from open-access sources. See `data/raw/README.md` for details.
+- 📊 Data: Reused under fair use from open-access sources. See `data/README.md` for details.
 
 ## 👤 Contact Info
 
