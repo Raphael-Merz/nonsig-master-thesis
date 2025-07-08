@@ -25,7 +25,7 @@ notebooks/
 ├── python/        # Jupyter notebooks to train and evaluate BERT models
 ├── r/             # Quarto scripts using the papercheck package and LLM prompts
 
-thesis/              # Proposal, thesis manuscript (in Quarto + apaquarto)
+thesis/            # Proposal, thesis manuscript (in Quarto + apaquarto)
 results/           # Model outputs, plots, tables
 ```
 
