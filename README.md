@@ -27,3 +27,19 @@ notebooks/
 
 thesis/              # Proposal, thesis manuscript (in Quarto + apaquarto)
 results/           # Model outputs, plots, tables
+
+---
+
+## 📄 License
+
+- Code is licensed under the MIT License.  
+- Data licensing details are included in `data/raw/README.md`.  
+
+## 👤 Contact Info
+
+**Raphael Merz**
+Ruhr University Bochum
+📧 Raphael.Merz@rub.de
+ORCID: 0000-0002-9474-3379
+
+If you use this project or the data, please consider citing it or getting in touch.
