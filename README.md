@@ -16,7 +16,7 @@ Researchers often misstate the implications of nonsignificant results, interpret
 
 ## 📁 Repository Structure
 
-```text
+```
 data/
 ├── raw/           # Manually labeled dataset (source: open access articles)
 ├── processed/     # Cleaned or augmented versions for training/testing
@@ -27,6 +27,7 @@ notebooks/
 
 thesis/              # Proposal, thesis manuscript (in Quarto + apaquarto)
 results/           # Model outputs, plots, tables
+```
 
 ---
 
