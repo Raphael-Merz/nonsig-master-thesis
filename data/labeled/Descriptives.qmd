@@ -1,0 +1,176 @@
+---
+title: "Descriptives for labeled_data"
+format: html
+editor: visual
+---
+
+# Descriptives for labeled_data
+
+This file contains code to calculate descriptive statistics of the labeled data that was used to train the classifiers.
+
+## Load data
+
+```{r}
+library(readxl)
+labeled_data <- read_excel("2025-06-28_labeled_data.xlsx")
+
+# Show head
+head(labeled_data)
+```
+
+## Preprocessing
+
+```{r}
+# currently not needed?
+```
+
+### Counting key words
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+
+# Remove NA values
+keywords <- labeled_data$label_keywords[!is.na(labeled_data$label_keywords)]
+
+# Split strings by "; ", unlist into a vector, and trim whitespace
+all_keywords <- str_split(keywords, pattern = "; ")
+all_keywords <- unlist(all_keywords)
+all_keywords <- str_trim(all_keywords)
+
+# Count frequency of each keyword
+keyword_counts <- as.data.frame(table(all_keywords), stringsAsFactors = FALSE)
+
+# Rename columns for clarity
+colnames(keyword_counts) <- c("keyword", "count")
+
+# Optional: sort by most frequent
+keyword_counts <- keyword_counts %>%
+  arrange(desc(count))
+
+# View result
+print(keyword_counts)
+```
+
+### Proportion of what codes
+
+```{r}
+library(dplyr)
+
+# Make sure to exclude NAs if not already done
+label_counts <- labeled_data %>%
+  filter(!is.na(label_strict) & label_strict != "") %>%
+  group_by(label_strict) %>%
+  summarise(
+    count = n()
+  ) %>%
+  mutate(
+    proportion = round(count / sum(count), 4)  # or use percent: *100
+  ) %>%
+  arrange(desc(count))
+
+# View the result
+print(label_counts)
+```
+
+### Descriptives for the number of extracted statements per article
+
+```{r}
+# Step 1: Count how many statements each article has
+statements_per_article <- labeled_data %>%
+  group_by(article_id) %>%
+  summarise(statements = n_distinct(statement_id))
+
+# Step 2: Calculate descriptive statistics including quartiles
+summary_stats <- statements_per_article %>%
+  summarise(
+    mean_statements   = mean(statements),
+    sd_statements     = sd(statements),
+    q1_statements     = quantile(statements, 0.25),
+    median_statements = median(statements),   # same as Q2
+    q3_statements     = quantile(statements, 0.75),
+    iqr_statements    = IQR(statements),
+    min_statements    = min(statements),
+    max_statements    = max(statements),
+    n_articles        = n()
+  )
+
+# View result
+print(summary_stats)
+```
+
+```{r}
+library(ggplot2)
+
+# Step 1: Count statements per article
+statements_per_article <- labeled_data %>%
+  group_by(article_id) %>%
+  summarise(statements = n_distinct(statement_id))
+
+# Step 2: Histogram
+hist_plot <- ggplot(statements_per_article, aes(x = statements)) +
+  geom_histogram(binwidth = 1, fill = "#69b3a2", color = "black") +
+  labs(
+    title = "Distribution of Statements per Article",
+    x = "Number of Statements",
+    y = "Number of Articles"
+  ) +
+  theme_minimal()
+
+# Step 3: Boxplot
+box_plot <- ggplot(statements_per_article, aes(y = statements)) +
+  geom_boxplot(fill = "#fcbf49", color = "black") +
+  coord_flip() +
+  labs(
+    title = "Boxplot of Statements per Article",
+    y = "Number of Statements"
+  ) +
+  theme_minimal()
+
+# Display both
+print(hist_plot)
+print(box_plot)
+
+```
+
+### Number of misinterpretations per article
+
+```{r}
+# Step 1: Count misinterpretations per article
+mis_by_article <- labeled_data %>%
+  filter(label_strict == 1) %>%
+  group_by(article_id) %>%
+  summarise(misinterpretations = n_distinct(statement_id))
+
+# Step 2: Add articles with zero misinterpretations
+all_articles <- labeled_data %>%
+  distinct(article_id)
+
+mis_full <- all_articles %>%
+  left_join(mis_by_article, by = "article_id") %>%
+  mutate(misinterpretations = ifelse(is.na(misinterpretations), 0, misinterpretations))
+
+# Step 3: Summary table
+mis_summary_table <- mis_full %>%
+  group_by(misinterpretations) %>%
+  summarise(n_articles = n()) %>%
+  mutate(proportion = round(n_articles / sum(n_articles), 4)) %>%
+  arrange(misinterpretations)
+
+print(mis_summary_table)
+```
+
+**Plot:**
+
+```{r}
+# Histogram of misinterpretations
+ggplot(mis_full, aes(x = misinterpretations)) +
+  geom_histogram(binwidth = 1, fill = "#ff6361", color = "black") +
+  labs(
+    title = "Distribution of Misinterpretations per Article",
+    x = "Number of Misinterpretations (Label = 1)",
+    y = "Number of Articles"
+  ) +
+  theme_minimal()
+```
