@@ -1,0 +1,55 @@
+---
+title: "Finding nonsig in Results"
+author: "Raphael Merz"
+format: html
+editor: visual
+---
+
+# Finding nonsig in Results
+
+## Preparation
+
+### Load packages
+
+```{r}
+#| message: false
+#install.packages("devtools") 
+# devtools::install_github("scienceverse/papercheck")
+library(papercheck)
+library(tidyverse)
+```
+
+### Load data
+
+```{r}
+psychsci_articles <- psychsci
+```
+
+## Use 'all_p_values' module to get all *p* values
+
+```{r}
+#| eval: false
+#| include: false
+
+# extract all sentences with p values
+p <- module_run(psychsci_articles, "all_p_values")
+
+# Keep only nonsignificant p  value statements
+nonsig_statement <- p$table[p$table$p_value > 0.05, ]
+
+# Extend text to the full sentence
+nonsig_statement_0 <- expand_text(nonsig_statement, paper = psychsci_articles, expand_to = "sentence", plus = 0, minus = 0)
+
+#Also add sentence before and after
+nonsig_statement_1 <- expand_text(nonsig_statement_0, paper = psychsci_articles, expand_to = "sentence", plus = 1, minus = 1)
+
+# Exclude duplicates and rename 'expanded' columns
+nonsig_statement <- nonsig_statement_1[!duplicated(nonsig_statement_1$expanded.x),] %>% rename(expanded=expanded.x, context=expanded.y)
+
+View(nonsig_statement)
+```
+
+```{r}
+# save file as csv
+write.csv2(nonsig_statement, "2025-06-27_nonsig_statements.csv", row.names = F)
+```
