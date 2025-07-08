@@ -27,7 +27,6 @@ notebooks/
 
 thesis/              # Proposal, thesis manuscript (in Quarto + apaquarto)
 results/           # Model outputs, plots, tables
-
 ```
 
 ---
