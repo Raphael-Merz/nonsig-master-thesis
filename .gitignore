@@ -4,7 +4,6 @@ __pycache__/
 *.so
 .env
 .venv/
-+venv/
 venv/
 
 # R
@@ -20,10 +19,8 @@ venv/
 _cache/
 *.html
 
-# Data (ignore all data files except README)
-data/raw/*
-!data/raw/README.md
-data/processed/*
+# Ignore notebook results
+notebooks/python/results/*
 
 # Logs and misc
 *.log
