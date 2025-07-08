@@ -34,8 +34,8 @@ results/           # Model outputs, plots, tables
 
 ## 📄 License
 
-- Code is licensed under the MIT License.  
-- Data licensing details are included in `data/raw/README.md`.  
+- 📄 Code and documentation: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- 📊 Data: Reused under fair use from open-access sources. See `data/raw/README.md` for details.
 
 ## 👤 Contact Info
 
