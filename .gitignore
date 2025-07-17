@@ -5,6 +5,8 @@ __pycache__/
 .env
 .venv/
 venv/
+.nonsig_venv/
+nonsig_venv/
 
 # R
 .Rhistory
