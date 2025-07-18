@@ -1,55 +1,62 @@
 ---
-title: "Finding nonsig in Results"
+title: "PDF to statement CSV"
 author: "Raphael Merz"
 format: html
 editor: visual
 ---
 
-# Finding nonsig in Results
+# PDF to statement CSV
 
-## Preparation
+## 0 Preparation
 
 ### Load packages
 
 ```{r}
 #| message: false
-#install.packages("devtools") 
+# install.packages("devtools") 
 # devtools::install_github("scienceverse/papercheck")
 library(papercheck)
 library(tidyverse)
 ```
 
-### Load data
+## 1 Configuration
 
 ```{r}
-psychsci_articles <- psychsci
+paper_path <- "papers" # path to folder with pdfs that should be converted
+
+data_path <- "Downloads/data.csv" # path to where the final csv with unlabeled statements should be stored
 ```
 
-## Use 'all_p_values' module to get all *p* values
+## 2 Convert PDF to XML
 
 ```{r}
-#| eval: false
-#| include: false
+pdf2grobid(paper_path, save_path = xml_path)
+```
+
+## 3 Extract nonsig statements from papers
+
+```{r}
+# read xml files in 'paper_path'
+papers <- read_grobid(paper_path)
 
 # extract all sentences with p values
-p <- module_run(psychsci_articles, "all_p_values")
+p <- module_run(papers, "all_p_values")
 
 # Keep only nonsignificant p  value statements
 nonsig_statement <- p$table[p$table$p_value > 0.05, ]
 
 # Extend text to the full sentence
-nonsig_statement_0 <- expand_text(nonsig_statement, paper = psychsci_articles, expand_to = "sentence", plus = 0, minus = 0)
+nonsig_statement <- expand_text(nonsig_statement, paper = papers, expand_to = "sentence", plus = 0, minus = 0)
 
-#Also add sentence before and after
-nonsig_statement_1 <- expand_text(nonsig_statement_0, paper = psychsci_articles, expand_to = "sentence", plus = 1, minus = 1)
-
-# Exclude duplicates and rename 'expanded' columns
-nonsig_statement <- nonsig_statement_1[!duplicated(nonsig_statement_1$expanded.x),] %>% rename(expanded=expanded.x, context=expanded.y)
+# Exclude duplicates
+nonsig_statement <- nonsig_statement[!duplicated(nonsig_statement$expanded),]
 
 View(nonsig_statement)
 ```
 
+## 4 Save statement file
+
 ```{r}
 # save file as csv
-write.csv2(nonsig_statement, "2025-06-27_nonsig_statements.csv", row.names = F)
+write.csv2(statements, file = data_path, row.names = F)
 ```
