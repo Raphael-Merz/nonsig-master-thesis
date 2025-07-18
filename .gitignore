@@ -24,5 +24,8 @@ _cache/
 # Ignore notebook results
 notebooks/python/results/*
 
+# Ignore saved classifier models
+notebooks/python/best_model/*
+
 # Logs and misc
 *.log
