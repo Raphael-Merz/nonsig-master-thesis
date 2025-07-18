@@ -24,7 +24,7 @@ library(tidyverse)
 ```{r}
 paper_path <- "papers" # path to folder with pdfs that should be converted
 
-data_path <- "Downloads/data.csv" # path to where the final csv with unlabeled statements should be stored
+data_path <- "papers/data.csv" # path to where the final csv with unlabeled statements should be stored
 ```
 
 ## 2 Convert PDF to XML
@@ -51,6 +51,9 @@ nonsig_statement <- expand_text(nonsig_statement, paper = papers, expand_to = "s
 # Exclude duplicates
 nonsig_statement <- nonsig_statement[!duplicated(nonsig_statement$expanded),]
 
+# Only include statements with 'results' or 'discussion' as the header
+nonsig_statement <- nonsig_statement[tolower(nonsig_statement$header) %in% c("results", "discussion"), ]
+
 View(nonsig_statement)
 ```
 
@@ -58,5 +61,5 @@ View(nonsig_statement)
 
 ```{r}
 # save file as csv
-write.csv2(statements, file = data_path, row.names = F)
+write.csv(nonsig_statement, file = data_path, row.names = F)
 ```
