@@ -27,5 +27,8 @@ notebooks/python/results/*
 # Ignore saved classifier models
 notebooks/python/best_model/*
 
+# Ignore pdf and xml files
+notebooks/r/papers
+
 # Logs and misc
 *.log
