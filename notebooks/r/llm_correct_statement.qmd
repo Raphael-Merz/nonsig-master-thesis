@@ -1,0 +1,125 @@
+---
+title: "PDF to statement CSV"
+author: "Raphael Merz"
+format: html
+editor: visual
+---
+
+# LLM correct incorrect statements
+
+## 0 Preparation
+
+### Load packages
+
+```{r}
+#| message: false
+# install.packages("devtools") 
+# devtools::install_github("scienceverse/papercheck")
+library(papercheck)
+library(tidyverse)
+```
+
+### Load data
+
+```{r}
+data_path <- "../../data/validation_data/validation_pred_labeled.csv" # path to where the csv with classifier-labeled statements is
+
+labeled_data <- read.csv(data_path)
+
+incorrect_ids <- which(labeled_data$label_pred == 1) 
+```
+
+### Check llm() setup
+
+```{r}
+if (Sys.getenv("GROQ_API_KEY") != "") {
+  message("GROQ_API_KEY is set.")
+} else {
+  warning("GROQ_API_KEY is NOT set.")
+}
+
+# Either set a groq API key in the llm() function
+# llm(..., API_KEY = "your_api_key")
+
+# Or run this line to open the R Environment file and put your API key there (recommended)
+# usethis::edit_r_environ() # and add: GROQ_API_KEY="your_api_key"
+```
+
+## 1 Send incorrect statements to LLM
+
+### Prompt
+
+```{r}
+prompt <- "
+Below you see a statement that was classified as a misinterpretation of a nonsignificant finding as the absence of an effect. This could be because the authors explicitly say that there is or was no effect/difference/association etc., but they could also say that groups/conditions etc. where similar/comparable or something similar.
+
+Your job is to correct this. It could be that there is a correct and an incorrect interpretation (e.g., first 'no significant difference' and then 'there was no effect'), or multiple incorrect interpretations. Ignore any other potentially problematic things in the statements and try to stay as close to the originaly statement as possible, while still fixing any misinterpretations as no effect/similar, like described above.
+
+Your response should only be the new, corrected version of the statement an nothing else.
+
+If a statement very clearly contains no nonsignificant p value or no interpretation of it, or the statement doesn't seem to be complete or, e.g., part of a table and no sentence or so, reply with only 'NO CORRECTION POSSIBLE'.
+
+Here's the statement with the misinterpretation:
+"
+```
+
+### LLM setup
+
+```{r}
+temperature = .5 # papercheck explanation: Controls randomness in responses. Lower values make responses more deterministic. Recommended range: 0.5-0.7 to prevent repetitions or incoherent outputs; valued between 0 inclusive and 2 exclusive
+
+# if you want to specify a specific model and not use the llm()-standard
+# model = "your_model_here"
+llm_model_list() # for a list of all available models
+
+# there is a model specific rate limit for the groq API. The default is set to 30. If you want to change it, run this code and adjust the rate limit accordingly
+# llm_max_calls(30)
+```
+
+### Ping LLM and store response
+
+```{r}
+# send each incorrect statement from the labeled dataset with above prompt to the llm
+llm_response <- llm(text = labeled_data$expanded[incorrect_ids], query = prompt)
+
+head(llm_response)
+```
+
+## 2 Save csv with corrected statements
+
+### Combining labeled_data with llm_response
+
+```{r}
+# Initialize new column with NA
+labeled_data$corrected <- NA
+
+# Fill only incorrect statements with the LLM response
+labeled_data$corrected[incorrect_ids] <- llm_response$answer
+
+# Store in new dataframe (optional)
+corrected <- labeled_data
+
+# Head 'corrected'
+head(corrected)
+```
+
+### Compare incorrect and corrected versions
+
+```{r}
+#| eval: false
+#| include: false
+# Subset only rows where corrections were made (i.e., corrected is not NA)
+comparison <- labeled_data[!is.na(labeled_data$corrected), c("expanded", "corrected")]
+
+# Optionally, rename columns for clarity
+colnames(comparison) <- c("original", "corrected")
+
+View(comparison)
+```
+
+### Save csv
+
+```{r}
+# save file as csv
+write.csv(corrected, file = data_path, row.names = F)
+```
