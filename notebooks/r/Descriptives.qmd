@@ -12,7 +12,7 @@ This file contains code to calculate descriptive statistics of the labeled data 
 
 ```{r}
 library(readxl)
-labeled_data <- read_excel("2025-06-28_labeled_data.xlsx")
+labeled_data <- read_excel("../../data/training_data/labeled/labeled_data.xlsx")
 
 # Show head
 head(labeled_data)
@@ -60,7 +60,7 @@ library(dplyr)
 
 # Make sure to exclude NAs if not already done
 label_counts <- labeled_data %>%
-  filter(!is.na(label_strict) & label_strict != "") %>%
+  #filter(!is.na(label_strict) & label_strict != "") %>%
   group_by(label_strict) %>%
   summarise(
     count = n()

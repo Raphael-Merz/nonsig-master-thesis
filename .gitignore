@@ -28,7 +28,7 @@ notebooks/python/results/*
 notebooks/python/best_model/*
 
 # Ignore pdf and xml files
-notebooks/r/papers
+data/validation_data/papers
 
 # Logs and misc
 *.log

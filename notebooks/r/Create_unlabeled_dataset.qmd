@@ -51,5 +51,5 @@ View(nonsig_statement)
 
 ```{r}
 # save file as csv
-write.csv2(nonsig_statement, "2025-06-27_nonsig_statements.csv", row.names = F)
+write.csv2(nonsig_statement, "../../data/training_data/unlabeled/unlabeled_data.csv", row.names = F)
 ```
