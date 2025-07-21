@@ -30,6 +30,8 @@ training_history_path <- "../../data/model_performance/model_training_history.cs
 
 test_predictions_path <- "../../data/model_performance/test_predictions.csv" # path to test_predictions.csv
 
+classification_report_path <- "../../data/model_performance/classification_report.csv" # path to classification_report.csv
+
 results_path <- "../../data/model_performance" # path to where results (incl. figures) should be stored
 ```
 
@@ -100,11 +102,13 @@ ggsave(paste0(results_path, "/loss_curve.png"), plot = loss_curve, dpi = 300)
 # Font Size is weird - need to fix
 ```
 
-### 2.2 Prepare test prediction data
+### 2.2 Prepare classification report 
 
 ```{r}
 # Load data
-test_predictions <- read.csv(test_predictions_path)
+classification_report <- read.csv(classification_report_path)
+
+# code here to reference specific values
 ```
 
 ## 
