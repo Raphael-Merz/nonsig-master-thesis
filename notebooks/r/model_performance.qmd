@@ -17,6 +17,10 @@ editor: visual
 # devtools::install_github("scienceverse/papercheck")
 library(papercheck)
 library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
 ```
 
 ## 1 Configuration
@@ -26,43 +30,81 @@ training_history_path <- "../../data/model_performance/model_training_history.cs
 
 test_predictions_path <- "../../data/model_performance/test_predictions.csv" # path to test_predictions.csv
 
-XXX_path <- "XXX" # path 
+results_path <- "../../data/model_performance" # path to where results (incl. figures) should be stored
 ```
 
-## 2 Convert PDF to XML
+## 2 Load data
+
+### 2.1 Prepare training history data
 
 ```{r}
-pdf2grobid(paper_path, save_path = paper_path)
+# Load data
+training_history <- read.csv(training_history_path)
+
+# Keep only rows that contain an epoch value
+training_history_clean <- training_history %>%
+  filter(!is.na(epoch))
+
+# Extract training and validation loss separately
+train_loss_df <- training_history_clean %>%
+  filter(!is.na(loss)) %>%
+  select(epoch, loss) %>%
+  distinct()
+
+eval_loss_df <- training_history_clean %>%
+  filter(!is.na(eval_loss)) %>%
+  select(epoch, eval_loss) %>%
+  distinct()
+
+# Merge into one dataframe
+loss_df <- full_join(train_loss_df, eval_loss_df, by = "epoch")
+
+# Reshape to long format for plotting
+loss_long <- loss_df %>%
+  pivot_longer(cols = c(loss, eval_loss),
+               names_to = "type", values_to = "loss")
+
+# Load font
+font_add("Times New Roman", regular = "C:/Windows/Fonts/times.ttf")
+showtext_auto()
+
+# Change factor levels for nicer legend labels
+loss_long$type <- factor(loss_long$type,
+                         levels = c("loss", "eval_loss"),
+                         labels = c("Training Loss", "Validation Loss"))
+
+# Plot
+loss_curve <- ggplot(loss_long, aes(x = epoch, y = loss, color = type)) +
+  geom_line(size = 1) +
+  geom_point(size = 3, shape = 15) +  # Square points
+  labs(
+    title = "Training and Validation Loss per Epoch",
+    x = "Epoch", y = "Loss", color = "Loss Type"
+  ) +
+  theme_minimal(base_family = "Times New Roman") +  # Font
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = c(0.95, 0.95),
+    legend.justification = c("right", "top"),
+    legend.background = element_rect(fill = alpha("white", 0.8), color = "black")
+  )
+loss_curve
 ```
 
-## 3 Extract nonsig statements from papers
+#### Save plot
 
 ```{r}
-# read xml files in 'paper_path'
-papers <- read_grobid(paper_path)
+# Save the plot as a PNG file
+ggsave(paste0(results_path, "/loss_curve.png"), plot = loss_curve, dpi = 300)
 
-# extract all sentences with p values
-p <- module_run(papers, "all_p_values")
-
-# Keep only nonsignificant p  value statements
-validation <- p$table[p$table$p_value > 0.05, ]
-
-# Extend text to the full sentence
-validation <- expand_text(validation, paper = papers, expand_to = "sentence", plus = 0, minus = 0)
-
-# Exclude duplicates
-validation <- validation[!duplicated(validation$expanded),]
-
-# Only include statements with 'results' or 'discussion' as the header
-validation <- validation[tolower(validation$header) %in% c("results", "discussion"), ]
-
-# View dataset
-# View(validation)
+# Font Size is weird - need to fix
 ```
 
-## 4 Save statement file
+### 2.2 Prepare test prediction data
 
 ```{r}
-# save file as csv
-write.csv(validation, file = data_path, row.names = F)
+# Load data
+test_predictions <- read.csv(test_predictions_path)
 ```
+
+## 
