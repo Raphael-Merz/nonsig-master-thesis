@@ -1,0 +1,68 @@
+---
+title: "PDF to statement CSV"
+author: "Raphael Merz"
+format: html
+editor: visual
+---
+
+# Model Performance
+
+## 0 Preparation
+
+### Load packages
+
+```{r}
+#| message: false
+# install.packages("devtools") 
+# devtools::install_github("scienceverse/papercheck")
+library(papercheck)
+library(tidyverse)
+```
+
+## 1 Configuration
+
+```{r}
+training_history_path <- "../../data/model_performance/model_training_history.csv" # path to model_training_history.csv
+
+test_predictions_path <- "../../data/model_performance/test_predictions.csv" # path to test_predictions.csv
+
+XXX_path <- "XXX" # path 
+```
+
+## 2 Convert PDF to XML
+
+```{r}
+pdf2grobid(paper_path, save_path = paper_path)
+```
+
+## 3 Extract nonsig statements from papers
+
+```{r}
+# read xml files in 'paper_path'
+papers <- read_grobid(paper_path)
+
+# extract all sentences with p values
+p <- module_run(papers, "all_p_values")
+
+# Keep only nonsignificant p  value statements
+validation <- p$table[p$table$p_value > 0.05, ]
+
+# Extend text to the full sentence
+validation <- expand_text(validation, paper = papers, expand_to = "sentence", plus = 0, minus = 0)
+
+# Exclude duplicates
+validation <- validation[!duplicated(validation$expanded),]
+
+# Only include statements with 'results' or 'discussion' as the header
+validation <- validation[tolower(validation$header) %in% c("results", "discussion"), ]
+
+# View dataset
+# View(validation)
+```
+
+## 4 Save statement file
+
+```{r}
+# save file as csv
+write.csv(validation, file = data_path, row.names = F)
+```
