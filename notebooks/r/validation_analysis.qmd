@@ -1,0 +1,78 @@
+---
+title: "Analysis of Validation data"
+author: "Raphael Merz"
+format: html
+editor: visual
+---
+
+# Analysis of Validation data
+
+## 0 Preparation
+
+### Load packages
+
+```{r}
+#| message: false
+# install.packages("devtools") 
+# devtools::install_github("scienceverse/papercheck")
+library(papercheck)
+library(tidyverse)
+```
+
+## 1 Configuration
+
+```{r}
+validation_path <- "../../data/validation_data/validation_data_wt_pred.csv" # path to folder with pdfs that should be converted; also saves xml files there
+```
+
+## 2 Load data
+
+```{r}
+validation_data <- read.csv(validation_path)
+```
+
+## 3 Analysis
+
+### 3.1 Overall Agreement
+
+```{r}
+# Calculate the overall agreement across all labels
+overall_agree <- length(which(validation_data$label == validation_data$label_pred))/nrow(validation_data)
+overall_agree
+```
+
+### 3.2 Agreement on real '0's
+
+```{r}
+real_0s <- validation_data[validation_data$label == 0,]
+
+agree_0 <- length(which(real_0s$label == real_0s$label_pred))/nrow(real_0s)
+agree_0
+```
+
+### 3.3 Agreement on real '1's
+
+```{r}
+real_1s <- validation_data[validation_data$label == 1,]
+
+agree_1 <- length(which(real_1s$label == real_1s$label_pred))/nrow(real_1s)
+agree_1
+```
+
+### 3.4 BERT predictions on real '-99's
+
+```{r}
+real_NAs <- validation_data[validation_data$label == -99,]
+
+NA_pred_0s <- length(which(real_NAs$label_pred == 0))/nrow(real_NAs)
+NA_pred_0s
+
+NA_pred_1s <- length(which(real_NAs$label_pred == 1))/nrow(real_NAs)
+NA_pred_1s
+```
+
+## 4 Figures
+
+```{r}
+# XXX
+```
