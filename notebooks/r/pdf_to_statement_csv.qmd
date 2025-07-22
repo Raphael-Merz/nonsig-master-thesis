@@ -24,7 +24,7 @@ library(tidyverse)
 ```{r}
 paper_path <- "../../data/validation_data/papers" # path to folder with pdfs that should be converted; also saves xml files there
 
-data_path <- "../../data/validation_data/validation_unlabeled.csv" # path to where the final csv with unlabeled statements should be stored
+data_path <- "../../data/validation_data/papers/paper_statements_unlabeled.csv" # path to where the final csv with unlabeled statements from pdfs should be stored
 ```
 
 ## 2 Convert PDF to XML
@@ -40,27 +40,27 @@ pdf2grobid(paper_path, save_path = paper_path)
 papers <- read_grobid(paper_path)
 
 # extract all sentences with p values
-p <- module_run(papers, "all_p_values")
+p_values <- module_run(papers, "all_p_values")
 
 # Keep only nonsignificant p  value statements
-validation <- p$table[p$table$p_value > 0.05, ]
+nonsig_p_values <- p_values$table[p_values$table$p_value > 0.05, ]
 
 # Extend text to the full sentence
-validation <- expand_text(validation, paper = papers, expand_to = "sentence", plus = 0, minus = 0)
+nonsig_p_statements <- expand_text(nonsig_p_values, paper = papers, expand_to = "sentence", plus = 0, minus = 0)
 
 # Exclude duplicates
-validation <- validation[!duplicated(validation$expanded),]
+nonsig_p_statements <- nonsig_p_statements[!duplicated(nonsig_p_statements$expanded),]
 
 # Only include statements with 'results' or 'discussion' as the header
-validation <- validation[tolower(validation$header) %in% c("results", "discussion"), ]
+nonsig_p_statements <- nonsig_p_statements[tolower(nonsig_p_statements$header) %in% c("results", "discussion"), ]
 
 # View dataset
-# View(validation)
+View(nonsig_p_statements)
 ```
 
 ## 4 Save statement file
 
 ```{r}
 # save file as csv
-write.csv(validation, file = data_path, row.names = F)
+write.csv(nonsig_p_statements, file = data_path, row.names = F)
 ```
