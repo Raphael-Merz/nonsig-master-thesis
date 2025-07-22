@@ -102,7 +102,7 @@ ggsave(paste0(results_path, "/loss_curve.png"), plot = loss_curve, dpi = 300)
 # Font Size is weird - need to fix
 ```
 
-### 2.2 Prepare classification report 
+### 2.2 Prepare classification report
 
 ```{r}
 # Load data
