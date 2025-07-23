@@ -31,5 +31,8 @@ notebooks/python/best_model/*
 data/validation_data/papers/*.pdf
 data/validation_data/papers/*.xml
 
+# Ignore pdfs of the papers checked in data/detection_check
+data/detection_check/article_pdfs
+
 # Logs and misc
 *.log
