@@ -38,6 +38,25 @@ format:
 a4paper: true
 ---
 
+```{r}
+#### Load results files ####
+
+classification_report_path <- "../data/model_performance/classification_report.csv" # path to classification_report.csv
+classification_report <- read.csv(classification_report_path)
+
+training_history_path <- "../data/model_performance/model_training_history.csv" # path to model_training_history.csv
+training_history <- read.csv(training_history_path)
+
+test_predictions_path <- "../data/model_performance/test_predictions.csv" # path to test_predictions.csv
+test_predictions <-read.csv(test_predictions_path)
+
+#### Load figures ####
+
+confusion_matrix <- "../../data/model_performance/confusion_matrix.png"
+
+loss_curve <- "../../data/model_performance/loss_curve.png"
+```
+
 # 1 Introduction
 
 Over the past decades, numerous articles have addressed common misinterpretations of *p* values in the context of standard null hypothesis significance testing (NHST) [@goodman08; @greenland_etal16; @schervish96]. Some go further, questioning the use of frequentist methods altogether [e.g., @edwards_etal63; @wagenmakers07], while others propose refinements within the frequentist framework that aim to improve the informativeness of statistical inference [e.g., @isager_fitzgerald24; @lakens_etal18]. If you are a researcher writing a paper and want to interpret your results correctly, the solution seems simple: read these educational resources and revise your manuscript accordingly. Easy, right? Still, empirical studies consistently show that these misinterpretations remain widespread [e.g., @hoekstra_etal06; @murphy_etal25]. Why is that? What makes interpreting *p* values so persistently difficult? Which practical solutions or promising approaches might help? And are some of the proposed 'misinterpretation checklists' perhaps less informative than their authors would hope?
@@ -83,7 +102,7 @@ In summary, there are many reasons why *p* values remain difficult to interpret 
 
 The main components of this thesis are summarized in @fig-1. I conceptualize the project as progressing through three key steps to achieve the goal of full automation.
 
-First, statements about nonsignificance - whether they are interpreted correctly or not - must be reliably detected. That is, the chosen method should ideally identify all sentences that refer to nonsignificant results while minimizing false positives (i.e., sentences that do not actually interpret nonsignificance). From which sections of a manuscript these statements should be identified remains an open question. To keep the project scope manageable, the initial focus will be on statements that include an explicitly nonsignificant *p* value (for now, *p* > .05). If this approach proves successful, I plan to expand the scope to include related contextual statements. A more ambitious, potentially out-of-scope of this thesis, extension would be to incorporate interpretations in discussion sections that do not directly report *p* values but still convey conclusions about nonsignificance.
+First, statements about nonsignificance - whether they are interpreted correctly or not - must be reliably detected. That is, the chosen method should ideally identify all sentences that refer to nonsignificant results while minimizing false positives (i.e., sentences that do not actually interpret nonsignificance). From which sections of a manuscript these statements should be identified remains an open question. To keep the project scope manageable, the initial focus will be on statements that include an explicitly nonsignificant *p* value (for now, *p* \> .05). If this approach proves successful, I plan to expand the scope to include related contextual statements. A more ambitious, potentially out-of-scope of this thesis, extension would be to incorporate interpretations in discussion sections that do not directly report *p* values but still convey conclusions about nonsignificance.
 
 Secondly, these statements must be classified as either correct (i.e., not suggesting the absence of an effect) or incorrect (i.e., suggesting the absence of an effect). @aczel_etal18 further categorized incorrect statements as either sample-level or population-level misinterpretations. For example, a sample-level misinterpretation might state that “groups were the same,” while a population-level one might claim that “men and women are the same”. Although this distinction is theoretically meaningful, for the purposes of detection and correction, both types are problematic and can be treated similarly in this context. However, the distinction may still offer valuable insights in meta-scientific contexts and will be explored as an optional classification system if time permits.
 
@@ -97,7 +116,7 @@ In this proposal, I focus on three primary technical approaches to automatic che
 
 ### 2.2.1 Rule-based text searches
 
-Rule-based methods, such as regular expressions (RegEx), allow for targeted text searches based on specific patterns. The papercheck framework already supports RegEx-based screening. RegEx is particularly useful because it accommodates flexible matching, such as optional characters (e.g., to get “wellbeing” and “well-being”) or intervening words (e.g., capturing “did not [...] predict”).
+Rule-based methods, such as regular expressions (RegEx), allow for targeted text searches based on specific patterns. The papercheck framework already supports RegEx-based screening. RegEx is particularly useful because it accommodates flexible matching, such as optional characters (e.g., to get “wellbeing” and “well-being”) or intervening words (e.g., capturing “did not \[...\] predict”).
 
 In early project stages, I will use rule-based approaches to identify a broad set of candidate statements that might interpret nonsignificant results (e.g., because they contain a *p* value above the 5% threshold). Because RegExes are inherently limited in semantic understanding, this approach is expected to yield many false positives but will help ensure that potential misinterpretations are not overlooked.
 
@@ -105,11 +124,11 @@ In early project stages, I will use rule-based approaches to identify a broad se
 
 Next, I will use LLMs, which are already integrated into papercheck, to refine the initial statement detection. For example, an LLM can assess whether sentences containing the term "well-being" refer to psychological well-being. Similarly, I will use LLMs to evaluate whether flagged sentences genuinely interpret nonsignificant findings.
 
-In preliminary tests I conducted using data from @murphy_etal25, LLMs showed relatively low agreement with human coders when directly classifying statements as correct or incorrect. However, they may still play a valuable role in other stages of the process. Specifically, LLMs could help identify semantically related statements that interpret nonsignificant results (e.g., in an article’s discussion section) but do not contain an explicit *p* value  - an important step toward expanding beyond simple rule-based detection. Additionally, LLMs will be central to the writing assistance component of this project, where they can generate context-sensitive corrections and improved phrasings for misinterpreted statements.
+In preliminary tests I conducted using data from @murphy_etal25, LLMs showed relatively low agreement with human coders when directly classifying statements as correct or incorrect. However, they may still play a valuable role in other stages of the process. Specifically, LLMs could help identify semantically related statements that interpret nonsignificant results (e.g., in an article’s discussion section) but do not contain an explicit *p* value - an important step toward expanding beyond simple rule-based detection. Additionally, LLMs will be central to the writing assistance component of this project, where they can generate context-sensitive corrections and improved phrasings for misinterpreted statements.
 
 ### 2.2.3 Classifier-based models
 
-Finally, I will explore machine learning classifiers that categorize statements based on learned patterns. Compared to generative LLMs like ChatGPT or LLaMA, fine-tuned transformer-based classifiers like BERT [bidirectional encoder representations from transformers\; @devlin_etal19] have often demonstrated superior performance in knowledge-intensive tasks such as scientific text classification [e.g., @bucher_martini24].
+Finally, I will explore machine learning classifiers that categorize statements based on learned patterns. Compared to generative LLMs like ChatGPT or LLaMA, fine-tuned transformer-based classifiers like BERT [bidirectional encoder representations from transformers; @devlin_etal19] have often demonstrated superior performance in knowledge-intensive tasks such as scientific text classification [e.g., @bucher_martini24].
 
 To evaluate the best-performing model for this use case, I will compare three transformer-based classifiers that vary in their training data and domain specialization. The original BERT model is a general-purpose language model pre-trained on BooksCorpus and English Wikipedia, making it suitable for a wide range of tasks but not optimized for scientific or technical language [@devlin_etal19]. SciBERT, by contrast, was specifically trained on a large corpus of scientific articles sourced from Semantic Scholar, with a focus on biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes further in domain specialization, having been trained exclusively on abstracts and full-texts of biomedical articles from the PubMed database [@gu_etal22]. These models will be tested on their ability to distinguish correct and incorrect interpretations of nonsignificant results in scientific writing.
 
@@ -121,10 +140,7 @@ To begin, I will manually code a set of open access Psychological Science articl
 
 **Detection**. Firstly, I will evaluate whether the rule-based search approach reliably detects all relevant statements that interpret nonsignificant findings. To do this, I will manually review a selection of full-text papers and identify any relevant statements that were missed by the automated search. These insights will help refine the detection rules and improve the tool’s ability to capture a broad range of relevant phrasing patterns.
 
-**Classification**. Secondly, the manually coded statements will be used to train and evaluate the BERT-based classifiers. For each model, I will report the confusion matrix values (true/false positives and negatives) and calculate the following standard performance metrics:
-- *Precision* measures the proportion of true positives out of all positive predictions, reflecting how many identified nonsignificant findings were correct.
-- *Recall* measures the proportion of true positives out of all actual positives, indicating how well the model identifies all relevant cases.
-- The *F1 score* is the harmonic mean of precision and recall, balancing both into a single metric, which is especially useful when there is an imbalance between the number of positive and negative cases.
+**Classification**. Secondly, the manually coded statements will be used to train and evaluate the BERT-based classifiers. For each model, I will report the confusion matrix values (true/false positives and negatives) and calculate the following standard performance metrics: - *Precision* measures the proportion of true positives out of all positive predictions, reflecting how many identified nonsignificant findings were correct. - *Recall* measures the proportion of true positives out of all actual positives, indicating how well the model identifies all relevant cases. - The *F1 score* is the harmonic mean of precision and recall, balancing both into a single metric, which is especially useful when there is an imbalance between the number of positive and negative cases.
 
 **User feedback**. Finally, I will assess the quality of LLM-generated suggestions for revised, statistically accurate phrasing. A subset of these corrections will be evaluated against human judgment to verify if they provide genuinely helpful and correct feedback. This step ensures that the final tool supports better writing without introducing new errors.
 
