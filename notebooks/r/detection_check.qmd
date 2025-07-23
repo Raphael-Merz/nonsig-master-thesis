@@ -1,0 +1,41 @@
+---
+title: "Statement Detection Check"
+author: "Raphael Merz"
+format: html
+editor: visual
+---
+
+# Statement Detection Check
+
+## Preparation
+
+### Load packages
+
+```{r}
+#| message: false
+#install.packages("devtools") 
+# devtools::install_github("scienceverse/papercheck")
+library(papercheck)
+library(tidyverse)
+```
+
+### Load data
+
+```{r}
+# papercheck's psychsci data
+psychsci_articles <- psychsci
+```
+
+## Create Detection Check dataset
+
+Pick 25 random articles from papercheck's 'psychsci' dataset and create a dataframe with their titles
+
+```{r}
+set.seed(42)
+article_ids <- sample(c(1:250), 25)
+```
+
+```{r}
+# save file as csv
+write.csv2(nonsig_statement, "../../data/training_data/unlabeled/unlabeled_data.csv", row.names = F)
+```
