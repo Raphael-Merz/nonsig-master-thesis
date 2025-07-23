@@ -24,18 +24,60 @@ library(tidyverse)
 ```{r}
 # papercheck's psychsci data
 psychsci_articles <- psychsci
+
+# unlabeled dataset
+unlabeled_data <- read.csv2("../../data/training_data/unlabeled/unlabeled_data.csv")
 ```
 
 ## Create Detection Check dataset
 
-Pick 25 random articles from papercheck's 'psychsci' dataset and create a dataframe with their titles
+Pick 25 random articles from papercheck's 'psychsci' dataset and create a dataframe with their titles and DOIs:
 
 ```{r}
 set.seed(42)
-article_ids <- sample(c(1:250), 25)
+random_rows <- sample(c(1:250), 25)
+
+check_articles <- info_table(psychsci[random_rows], c("title", "doi"))
+
+check_articles$id <- as.numeric(check_articles$id)
 ```
+
+Reduce unlabeled_data to just statements from any of these 25 articles (to have a dataset with automatically extracted statements from these articles):
+
+```{r}
+auto_statements_df <- unlabeled_data[unlabeled_data$id %in% check_articles$id, ]
+```
+
+Add 'title' and 'doi' column to 'auto_statements_df':
+
+```{r}
+auto_statements_df <- auto_statements_df %>%
+  left_join(check_articles %>% select(id, title, doi), by = "id")
+```
+
+Add 'human_statement' column for statements manually found and rename 'expanded' and 'context':
+
+```{r}
+detection_check_df <- auto_statements_df
+
+detection_check_df$human_statement <- NA
+
+detection_check_df <- detection_check_df %>%
+  rename(article_id = id, machine_statement = expanded, machine_context = context)
+```
+
+Reorder variable order (id, doi and title first):
+
+```{r}
+detection_check_df <- detection_check_df %>%
+  select(article_id, doi, title, everything())
+```
+
+### Save dataset
+
+...with csv2 (since I need to manually change things while checking article pdfs):
 
 ```{r}
 # save file as csv
-write.csv2(nonsig_statement, "../../data/training_data/unlabeled/unlabeled_data.csv", row.names = F)
+write.csv2(detection_check_df, "../../data/detection_check/detection_unchecked.csv", row.names = F)
 ```
