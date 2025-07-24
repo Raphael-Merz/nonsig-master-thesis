@@ -334,7 +334,37 @@ tibble(
 
 ```{r}
 #| include: false
-llm_corrections <- read_excel("../data/llm_correction_check/llm_correction_unchecked.xlsx")
+llm_corrections <- read_excel("../data/llm_correction_check/llm_correction_checked.xlsx")
+
+n_correct <- sum(llm_corrections$corrected_correct == 0)
+n_incorrect <- sum(llm_corrections$corrected_correct == 1)
+
+n_0_correct <- sum(llm_corrections$label == 0 & llm_corrections$corrected_correct == 0)
+n_0_incorrect <- sum(llm_corrections$label == 0 & llm_corrections$corrected_correct == 1)
+
+n_1_correct <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 0)
+n_1_incorrect  <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 1)
+```
+
+A total of 100 statements from the classifier training data (since I had human labels for them and knew whether they were correct or incorrect) were sent to an LLM with papercheck using the groq API (XXX Insert model here XXX). 80 of these were statements that were classified as incorrect by me (see XXX section). An additional 20 correct statement were also included, to check how the LLM would deal with false positives from the automated classification. In total, `r round(100*(n_correct/(n_correct+n_incorrect)), 0)` % of these were correct. Interestingly,  `r n_0_incorrect` of the previously correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 previously incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change as much as necessary, but as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some really good/bad corrections can be found in @tbl-llm-corrections.
+
+```{r}
+#| label: tbl-llm-corrections
+#| message: false
+#| warning: false
+#| apa-note: Table of original and LLM-corrected statements and their respective labels.
+#| ft-align: left
+#| tbl-cap: Examples of LLM Corrections
+library(tidyverse)
+library(flextable)
+
+tibble(
+  'Original Statement' = c(llm_corrections$statement[10], llm_corrections$statement[60], llm_corrections$statement[79], llm_corrections$statement[80]),
+  'Original Label' = as.character(c(llm_corrections$label[10], llm_corrections$label[60], llm_corrections$label[79], llm_corrections$label[80]), 0),
+  'LLM-Corrected Statement' = c(llm_corrections$corrected[10], llm_corrections$corrected[60], llm_corrections$corrected[79], llm_corrections$corrected[80]),
+  'New Label' = as.character(c(llm_corrections$corrected_correct[10], llm_corrections$corrected_correct[60], llm_corrections$corrected_correct[79], llm_corrections$corrected_correct[80]), 0)) %>% 
+  flextable() %>% 
+  theme_apa()
 ```
 
 # 4 Discussion
