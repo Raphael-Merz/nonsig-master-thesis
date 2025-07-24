@@ -60,8 +60,8 @@ library(dplyr)
 
 # Make sure to exclude NAs if not already done
 label_counts <- labeled_data %>%
-  #filter(!is.na(label_strict) & label_strict != "") %>%
-  group_by(label_strict) %>%
+  #filter(!is.na(label) & label != "") %>%
+  group_by(label) %>%
   summarise(
     count = n()
   ) %>%
@@ -139,7 +139,7 @@ print(box_plot)
 ```{r}
 # Step 1: Count misinterpretations per article
 mis_by_article <- labeled_data %>%
-  filter(label_strict == 1) %>%
+  filter(label == 1) %>%
   group_by(article_id) %>%
   summarise(misinterpretations = n_distinct(statement_id))
 
