@@ -17,18 +17,32 @@ editor: visual
 # devtools::install_github("scienceverse/papercheck")
 library(papercheck)
 library(tidyverse)
+library(readxl)
 ```
 
 ### Load data
 
 ```{r}
-data_path <- "../../data/model_performance/test_predictions.csv" # path to where the csv with classifier-labeled statements is
+data_path <- "../../data/training_data/labeled/labeled_data.xlsx" # path to where the csv with human-labeled statements is
 
-corrected_path <- "../../data/llm_correction_check/corrected_clean.csv"# path to where the final csv with the corrected statements should be stored
+corrected_path <- "../../data/llm_correction_check/llm_correction_unchecked.csv"# path to where the final csv with the corrected statements should be stored
 
-labeled_data <- read.csv(data_path)
+# Load data
+labeled_data <- read_excel(data_path)
 
-pred_1_ids <- which(labeled_data$BERT_label == 1)
+# Create subset with only relevant columns and rename
+subset_df <- labeled_data %>%
+  select(statement = expanded, label)
+
+# Sample 80 incorrect (label == 1) and 20 correct (label == 0) statements
+set.seed(42)  # for reproducibility
+subset_sample <- bind_rows(
+  sample_n(filter(subset_df, label == 1), 80),
+  sample_n(filter(subset_df, label == 0), 20)
+)
+
+# Shuffle the combined set
+subset_sample <- subset_sample %>% sample_frac(1)
 ```
 
 ### Check llm() setup
@@ -81,11 +95,11 @@ llm_model_list() # for a list of all available models
 ### Ping LLM and store response
 
 ```{r}
-# not best Practice, but for now set llm_max_calls() to number of statements I will send
-llm_max_calls(length(pred_1_ids))
+# not best Practice, but for now set llm_max_calls() to 100 and send all statements at once
+llm_max_calls(nrow(subset_sample))
 
 # send each incorrect statement from the labeled dataset with above prompt to the llm
-llm_response <- llm(text = labeled_data$statement[pred_1_ids], query = prompt)
+llm_response <- llm(text = subset_sample$statement, query = prompt)
 
 head(llm_response)
 ```
@@ -95,31 +109,14 @@ head(llm_response)
 ### Combining labeled_data with llm_response
 
 ```{r}
-# Initialize new column with NA
-labeled_data$corrected <- NA
+# Store in new dataframe
+corrected <- subset_sample
 
-# Fill only incorrect statements with the LLM response
-labeled_data$corrected[pred_1_ids] <- llm_response$answer
-
-# Store in new dataframe (optional)
-corrected <- labeled_data
+# Save llm_response in corrected
+corrected$corrected <- llm_response$answer
 
 # Head 'corrected'
 head(corrected)
-```
-
-### Compare incorrect and corrected versions
-
-```{r}
-#| eval: false
-#| include: false
-# Subset only rows where corrections were made (i.e., corrected is not NA)
-comparison <- labeled_data[!is.na(labeled_data$corrected), c("statement", "corrected")]
-
-# Optionally, rename columns for clarity
-colnames(comparison) <- c("original", "corrected")
-
-View(comparison)
 ```
 
 ### Save csv
