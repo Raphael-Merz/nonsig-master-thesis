@@ -1,6 +1,6 @@
 ---
-title: "The *p* stands for Proofread: Automated Detection and Correction of Nonsignificance Misinterpretations"
-shorttitle: "Automated Misinterpretation Detection and Correction"
+title: "From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant *p* Values"
+shorttitle: "Hybrid NLP for Correcting *p* Value Misinterpretations"
 author:
   - name: Raphael Merz
     corresponding: true
@@ -61,11 +61,13 @@ loss_curve <- "../../data/model_performance/loss_curve.png"
 
 Over the past decades, numerous articles have addressed common misinterpretations of *p* values in the context of standard null hypothesis significance testing (NHST) [@goodman08; @greenland_etal16; @schervish96]. Some go further, questioning the use of frequentist methods altogether [e.g., @edwards_etal63; @wagenmakers07], while others propose refinements within the frequentist framework that aim to improve the informativeness of statistical inference [e.g., @isager_fitzgerald24; @lakens_etal18]. If you are a researcher writing a paper and want to interpret your results correctly, the solution seems simple: read these educational resources and revise your manuscript accordingly. Easy, right? Still, empirical studies consistently show that these misinterpretations remain widespread [e.g., @hoekstra_etal06; @murphy_etal25]. Why is that? What makes interpreting *p* values so persistently difficult? Which practical solutions or promising approaches might help? And are some of the proposed 'misinterpretation checklists' perhaps less informative than their authors would hope?
 
-This proposal aims to develop an automated framework to detect, classify, and correct misinterpretations of *p* values in research papers using a mix of rule-, large language model- (LLM), and classifier-based approaches. I focus on the misinterpretation of statistically nonsignificant results as the absence of an effect because it is the most extensively researched misinterpretation of *p* values [@lakens21], and I have experience in classifying these interpretations from a previous project [@murphy_etal25]. That said, I aim to address the bigger picture of *p* value misinterpretations, going beyond nonsignificance as the absence of an effect, in more detail in the final thesis, and will discuss how the analysis pipeline could be adapted to detect other types of misinterpretations.
+In this master's thesis, I show how rule-based approaches, combined with natural language processing (NLP) can be used to automatically detect, classify, and correct these misinterpretation. I show this for the misinterpretation of statistically nonsignificant results as the absence of an effect because it is the most extensively researched misinterpretation of *p* values [@lakens21], and I have experience in classifying them from a previous project [@murphy_etal25]. That said, the general framework I propose can be easily adapted to address other misinterpretations, also beyond *p* values.
 
-## 1.1 *p* values criticism
+## 1.1 Common Misinterpretations of *p* Values
 
-The criticism of *p* values has become a prominent and recurring theme in discussions around scientific reform. From claims that they encourage dichotomous thinking [@hoekstra_etal06; @amrhein_etal19] to arguments that they offer little informational value [@wagenmakers07], *p* values – and the broader framework of NHST – have been blamed for many of science’s replication problems [@mcshane_etal19]. On the other hand, many have also argued that NHST per se is not to blame for these problems, but rather how researchers (mis)use and (mis)interpret this tool [@lakens21].
+The criticism of *p* values has become a prominent and recurring theme in discussions around scientific reform. From claims that they encourage dichotomous thinking [@hoekstra_etal06; @amrhein_etal19] to arguments that they offer little informational value [@wagenmakers07], *p* values – and the broader framework of NHST – have been blamed for many of science’s replication problems [@mcshane_etal19]. On the other hand, many have also argued that NHST per se is not to blame for these problems, but rather how researchers (mis)use and (mis)interpret this tool [@lakens21]. As a result, many researchers present whole collections of, in their view, common *p* value misinterpretations [see, e.g., @goodman08; @greenland_etal16]. Reviewing these, I come to the conclusion that there are four distinct types of misconceptions about *p* values that seem to be at play:
+
+XXX
 
 In my master thesis, I will zoom in on one specific misinterpretation: concluding *no effect* based on a statistically nonsignificant finding. Many studies have previously shown that this misinterpretation is and remains highly prevalent across time and sub-domains of psychology [e.g., @aczel_etal18; @hoekstra_etal06; @murphy_etal25]. In fact, in a recently published article investigating articles published in 2009, 2015, and 2021 across ten different psychology journals (mainly in the field of personality and social psychology), we estimated the prevalence of this misinterpretation in articles’ discussion sections to lie between 76.17% and 84.90% [@murphy_etal25]. This study highlights that the situation seems not to have greatly improved despite many researchers exploring new analysis techniques [e.g., @lakens_etal18] and continuous calls to reflect on interpretations of nonsignificant results [e.g., @mcshane_etal19].
 
@@ -82,11 +84,17 @@ I argue that many of these published 'misinterpretation checklists' largely reit
 
 This misinterpretation refers to the tendency of researchers to treat *p* values as if they represented the probability that the null (or alternative) hypothesis is true. Researchers who follow this misinterpretation may interpret *p* values below the conventional 5% threshold as evidence that $H_1$ is true (and $H_0$ is false), and nonsignificant *p* values as evidence that $H_0$ is true (and $H_1$ is false). In this project, I specifically focus on the latter mistake: interpreting a nonsignificant result as proof that no effect exists. This interpretation cannot be justified within the standard NHST framework, which defines the *p* value as the probability of observing the data, or something more extreme, assuming that the null hypothesis is true. There are, however, ways to overcome these misinterpretations, which I will discuss in the next section.
 
-## 1.2 Overcoming *p* value misinterpretations
+## 1.2 Research on nonsignificance as absence
+
+XXX @aczel_etal18; @hoekstra_etal06; @murphy_etal25; and more
+
+## 1.3 Possible solutions
 
 This section will be more detailed in the final thesis, but I do want to briefly outline what I consider the most important solutions to the misinterpretation of nonsignificant results as evidence for the absence of an effect. One frequently suggested solution is to improve researchers’ statistical literacy through enhanced education, such as better statistics teaching at the undergraduate and graduate levels [e.g., @lakens21]. However, as noted earlier, the prevalence of the misinterpretations I focus on does not seem to have substantially decreased, suggesting that calls for better education alone have not resolved the problem [@murphy_etal25].
 
 A promising practical solution when conducting research involves the use of alternative analysis techniques, such as equivalence testing or minimum-effect tests. These methods allow researchers to test whether an effect is practically relevant and larger than a predefined smallest effect size of interest (SESOI) [@lakens_etal18]. In many contexts, such approaches might be more closely aligned with the substantive questions researchers aim to answer, namely whether an effect is meaningful in practice.
+
+## 1.4 An Automated Human-Factors Perspective
 
 These strategies also align with the argument made by @lakens21 that *p* value misinterpretations represent a human factors problem, requiring practical and easy-to-implement solutions. Everyday examples of such solutions include cars with automatic braking systems, word processors that flag spelling and grammar mistakes, or email clients that filter out malware and phishing attempts. Analogously, and recognizing that new analytic approaches may not be adopted overnight, automated checks for statistical misinterpretations offer a highly promising route. This perspective emphasizes that many statistical errors arise not from bad intentions or ignorance, but from cognitive limitations and suboptimal workflows.
 
@@ -98,65 +106,250 @@ In summary, there are many reasons why *p* values remain difficult to interpret 
 
 # 2 Methods
 
-## 2.1 Identifying sub-steps
+## 2.1 The Three-Step Framework
 
 The main components of this thesis are summarized in @fig-1. I conceptualize the project as progressing through three key steps to achieve the goal of full automation.
 
-First, statements about nonsignificance - whether they are interpreted correctly or not - must be reliably detected. That is, the chosen method should ideally identify all sentences that refer to nonsignificant results while minimizing false positives (i.e., sentences that do not actually interpret nonsignificance). From which sections of a manuscript these statements should be identified remains an open question. To keep the project scope manageable, the initial focus will be on statements that include an explicitly nonsignificant *p* value (for now, *p* \> .05). If this approach proves successful, I plan to expand the scope to include related contextual statements. A more ambitious, potentially out-of-scope of this thesis, extension would be to incorporate interpretations in discussion sections that do not directly report *p* values but still convey conclusions about nonsignificance.
+First, statements about nonsignificance - whether they are interpreted correctly or not - must be reliably detected. That is, the chosen method should ideally identify all sentences that refer to nonsignificant results while minimizing false positives (i.e., sentences that do not actually interpret nonsignificance). From which sections of a manuscript these statements should be identified remains an open question. To keep the project scope manageable, the initial focus will be on statements that include an explicitly nonsignificant *p* value (for now, *p* > .05). If this approach proves successful, I plan to expand the scope to include related contextual statements. A more ambitious, potentially out-of-scope of this thesis, extension would be to incorporate interpretations in discussion sections that do not directly report *p* values but still convey conclusions about nonsignificance.
 
 Secondly, these statements must be classified as either correct (i.e., not suggesting the absence of an effect) or incorrect (i.e., suggesting the absence of an effect). @aczel_etal18 further categorized incorrect statements as either sample-level or population-level misinterpretations. For example, a sample-level misinterpretation might state that “groups were the same,” while a population-level one might claim that “men and women are the same”. Although this distinction is theoretically meaningful, for the purposes of detection and correction, both types are problematic and can be treated similarly in this context. However, the distinction may still offer valuable insights in meta-scientific contexts and will be explored as an optional classification system if time permits.
 
 Lastly, there are three ways in which I plan to implement this tool: (A) as writing assistance, where users will receive suggested alternatives to problematic phrasings that avoid implying the absence of an effect. Initially, this will focus on sentences containing a nonsignificant *p* value, but later stages may also target surrounding contextual statements. (B) If the tool's performance is sufficient, it will be applied to a large collection of articles to estimate the prevalence of the misinterpretation across journals and time. (C) The tool will be added to the papercheck module list, allowing users to run automated checks via the existing Shiny app interface [see https://scienceverse.github.io/papercheck/reference/papercheck_app.html; @debruine_lakens25].
 
-![Project Components](Fig1.png){#fig-1 width="5in" fig-alt="Different components of the project and how likely they will be part of the final thesis." apa-note="The colors indicate how likely it is that the respective component will be included in the final thesis: green – definitely included; yellow – likely included; orange – possibly included; red – unlikely to be included."}
+```{r Figure 1}
+#### Load Fig_1 path
 
-## 2.2 Approaches to automatic checks
+fig_1 <- "XXX"
 
-In this proposal, I focus on three primary technical approaches to automatic checking of *p* value interpretations and text classification more generally. Rule-based text searches will primarily detect candidate statements (e.g., those explicitly stating nonsignificant *p* values). LLM-based approaches will help determine whether these statements truly reflect nonsignificance interpretations, identify contextually related statements without *p* values, and generate improved phrasing for incorrect interpretations. Finally, classifier-based models will categorize statements as correct or incorrect. These three approaches are complementary and will be integrated across the detection, classification, and correction steps.
+# paste this below when fig is here
+#![Project Components](Fig1.png){#fig-1 width="5in" fig-alt="XXX" apa-note="Note here."}
+```
 
-### 2.2.1 Rule-based text searches
+### 2.1.1 Detection using RegEx
 
-Rule-based methods, such as regular expressions (RegEx), allow for targeted text searches based on specific patterns. The papercheck framework already supports RegEx-based screening. RegEx is particularly useful because it accommodates flexible matching, such as optional characters (e.g., to get “wellbeing” and “well-being”) or intervening words (e.g., capturing “did not \[...\] predict”).
+Rule-based methods, such as regular expressions (RegEx), allow for targeted text searches based on specific patterns. The papercheck framework already supports RegEx-based screening. RegEx is particularly useful because it accommodates flexible matching, such as optional characters (e.g., to get “wellbeing” and “well-being”) or intervening words (e.g., capturing “did not [...] predict”).
 
 In early project stages, I will use rule-based approaches to identify a broad set of candidate statements that might interpret nonsignificant results (e.g., because they contain a *p* value above the 5% threshold). Because RegExes are inherently limited in semantic understanding, this approach is expected to yield many false positives but will help ensure that potential misinterpretations are not overlooked.
 
-### 2.2.2 LLM-based approaches
+### 2.1.2 Classification using BERT
 
-Next, I will use LLMs, which are already integrated into papercheck, to refine the initial statement detection. For example, an LLM can assess whether sentences containing the term "well-being" refer to psychological well-being. Similarly, I will use LLMs to evaluate whether flagged sentences genuinely interpret nonsignificant findings.
-
-In preliminary tests I conducted using data from @murphy_etal25, LLMs showed relatively low agreement with human coders when directly classifying statements as correct or incorrect. However, they may still play a valuable role in other stages of the process. Specifically, LLMs could help identify semantically related statements that interpret nonsignificant results (e.g., in an article’s discussion section) but do not contain an explicit *p* value - an important step toward expanding beyond simple rule-based detection. Additionally, LLMs will be central to the writing assistance component of this project, where they can generate context-sensitive corrections and improved phrasings for misinterpreted statements.
-
-### 2.2.3 Classifier-based models
-
-Finally, I will explore machine learning classifiers that categorize statements based on learned patterns. Compared to generative LLMs like ChatGPT or LLaMA, fine-tuned transformer-based classifiers like BERT [bidirectional encoder representations from transformers; @devlin_etal19] have often demonstrated superior performance in knowledge-intensive tasks such as scientific text classification [e.g., @bucher_martini24].
+Finally, I will explore machine learning classifiers that categorize statements based on learned patterns. Compared to generative LLMs like ChatGPT or LLaMA, fine-tuned transformer-based classifiers like BERT [bidirectional encoder representations from transformers\; @devlin_etal19] have often demonstrated superior performance in knowledge-intensive tasks such as scientific text classification [e.g., @bucher_martini24].
 
 To evaluate the best-performing model for this use case, I will compare three transformer-based classifiers that vary in their training data and domain specialization. The original BERT model is a general-purpose language model pre-trained on BooksCorpus and English Wikipedia, making it suitable for a wide range of tasks but not optimized for scientific or technical language [@devlin_etal19]. SciBERT, by contrast, was specifically trained on a large corpus of scientific articles sourced from Semantic Scholar, with a focus on biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes further in domain specialization, having been trained exclusively on abstracts and full-texts of biomedical articles from the PubMed database [@gu_etal22]. These models will be tested on their ability to distinguish correct and incorrect interpretations of nonsignificant results in scientific writing.
 
-## 2.3 Performance metrics and human coding
+### 2.1.3 Correction using LLMs
 
-Each stage of the tool’s pipeline—detection, classification, and user feedback—will be evaluated against human-coded ‘ground truth’ data to ensure the system functions as intended.
+Next, I will use LLMs, which are already integrated into papercheck, to refine the initial statement detection. For example, an LLM can assess whether sentences containing the term "well-being" refer to psychological well-being. Similarly, I will use LLMs to evaluate whether flagged sentences genuinely interpret nonsignificant findings.
 
-To begin, I will manually code a set of open access Psychological Science articles that are included in the papercheck testing dataset (provided for users to explore key functions). The final number of articles will depend on how time-intensive the manual coding proves to be, which I will assess in early piloting. These human-coded statements will serve several purposes throughout the project.
+In preliminary tests I conducted using data from @murphy_etal25, LLMs showed relatively low agreement with human coders when directly classifying statements as correct or incorrect. However, they may still play a valuable role in other stages of the process. Specifically, LLMs could help identify semantically related statements that interpret nonsignificant results (e.g., in an article’s discussion section) but do not contain an explicit *p* value  - an important step toward expanding beyond simple rule-based detection. Additionally, LLMs will be central to the writing assistance component of this project, where they can generate context-sensitive corrections and improved phrasings for misinterpreted statements.
+
+## 2.3 Sample and Validation Process
+
+```{r papercheck sample library descriptives}
+#| include: false
+#### Descriptive of the Sample Articles
+
+library(papercheck)
+
+sample_data <- psychsci
+
+submission_years <- c()
+
+# Extract all submission strings
+for (article in sample_data) {
+  submission <- article[["info"]][["submission"]][[1]]
+  submission_years <- c(submission_years, submission)
+}
+
+submission_df <- data.frame(submission_years, stringsAsFactors = FALSE)
+
+# Extract the date following "Revision accepted"
+submission_df$revision_accepted_date <- sub(
+  ".*(?:Revision accepted|Accepted)[ ]*([0-9]{1,2}/[0-9]{1,2}/[0-9]{2}).*",
+  "\\1",
+  submission_df$submission_years
+)
+
+# Clean and normalize dates (pad month/day if needed)
+split_dates <- strsplit(submission_df$revision_accepted_date, "/")
+
+normalized_dates <- sapply(split_dates, function(x) {
+  if (length(x) == 3) {
+    month <- sprintf("%02d", as.numeric(x[1]))
+    day   <- sprintf("%02d", as.numeric(x[2]))
+    year  <- x[3]
+    paste0(month, "/", day, "/", year)
+  } else {
+    NA
+  }
+})
+
+# Convert to Date and extract year
+submission_df$date_parsed <- as.Date(normalized_dates, format = "%m/%d/%y")
+submission_df$publication_year <- format(submission_df$date_parsed, "%Y")
+
+# Convert publication_year to numeric, in case it's still a character
+submission_df$publication_year <- as.numeric(submission_df$publication_year)
+
+# Load 'psych' package if not already loaded (needed for describe)
+library(psych)
+
+# Get full descriptive stats
+descriptives_article_year <- describe(submission_df$publication_year)
+
+# Extract and round common statistics
+median_article_year  <- round(descriptives_article_year$median, 0)
+min_article_year     <- round(descriptives_article_year$min, 0)
+max_article_year     <- round(descriptives_article_year$max, 0)
+
+# Get Q1 and Q3 using base R
+quartiles <- quantile(submission_df$publication_year, probs = c(0.25, 0.75), na.rm = TRUE)
+q1_article_year <- round(quartiles[[1]], 0)
+q3_article_year <- round(quartiles[[2]], 0)
+```
+
+The articles that were used in this study were part of papercheck's sample library of 250 open access article from the journal Psychological Science, published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = [`r q1_article_year`; `r q3_article_year`]). 
+
+Each stage of the pipeline — detection, classification, and correction — will be evaluated against human-coded ‘ground truth’ data to ensure the system functions as intended. To do this, I manually coded 
+
+To begin, I will manually code Science articles that are included in the papercheck testing dataset (provided for users to explore key functions). The final number of articles will depend on how time-intensive the manual coding proves to be, which I will assess in early piloting. These human-coded statements will serve several purposes throughout the project.
 
 **Detection**. Firstly, I will evaluate whether the rule-based search approach reliably detects all relevant statements that interpret nonsignificant findings. To do this, I will manually review a selection of full-text papers and identify any relevant statements that were missed by the automated search. These insights will help refine the detection rules and improve the tool’s ability to capture a broad range of relevant phrasing patterns.
 
-**Classification**. Secondly, the manually coded statements will be used to train and evaluate the BERT-based classifiers. For each model, I will report the confusion matrix values (true/false positives and negatives) and calculate the following standard performance metrics: - *Precision* measures the proportion of true positives out of all positive predictions, reflecting how many identified nonsignificant findings were correct. - *Recall* measures the proportion of true positives out of all actual positives, indicating how well the model identifies all relevant cases. - The *F1 score* is the harmonic mean of precision and recall, balancing both into a single metric, which is especially useful when there is an imbalance between the number of positive and negative cases.
+**Classification**. Secondly, the manually coded statements will be used to train and evaluate the BERT-based classifiers. For each model, I will report the confusion matrix values (true/false positives and negatives) and calculate the following standard performance metrics:
+- *Precision* measures the proportion of true positives out of all positive predictions, reflecting how many identified nonsignificant findings were correct.
+- *Recall* measures the proportion of true positives out of all actual positives, indicating how well the model identifies all relevant cases.
+- The *F1 score* is the harmonic mean of precision and recall, balancing both into a single metric, which is especially useful when there is an imbalance between the number of positive and negative cases.
 
 **User feedback**. Finally, I will assess the quality of LLM-generated suggestions for revised, statistically accurate phrasing. A subset of these corrections will be evaluated against human judgment to verify if they provide genuinely helpful and correct feedback. This step ensures that the final tool supports better writing without introducing new errors.
 
 Following this validation and if the model achieves sufficient performance, the tool will be applied to a larger set of articles for analyses (see @fig-1), similar to the approach in @murphy_etal25. This potential phase will, however, be preregistered separately with its respective hypotheses and planned analyses.
 
-## 2.4 Timetable
+## 2.4 Open Science
 
-A tentative timeline for the development and evaluation of the tool is shown in @fig-2. As mentioned earlier, the project follows an iterative structure. I will begin by implementing the core functionality (indicated in green in @fig-1), and based on its performance, aim to extend it to the more advanced components (yellow to red in @fig-1). The final deadline for submitting the thesis is August 31, 2025.
+All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio) are available in this GitHub repository, together with instructions on how to set it up: XXX.com.
 
-![Thesis Timeline](Fig2.png){#fig-2 width="6in" fig-alt="Thesis Timeline" apa-note="Timeline of the project's sub-steps (as outlined in Figure 1), indicating when each step will be conducted between May and August 2025."}
+This thesis was not preregistered as no inferential statistical tests were performed. 
 
-# 3 Preliminary Results and Final Remarks
+# 3 Results
 
-While many aspects of the project are still in development, early results from the rule-based text searches are highly encouraging. Although these searches currently focus on relatively simple terms and patterns, identifying these statements in a manuscript already provides significant value to authors writing scientific texts. The inclusion of classifiers and suggested alternative phrasings will further enhance the tool’s functionality, offering users even greater support.
+## 3.1 Detection Accuracy
 
-Regardless of the final scope, I am confident that this project will yield a robust and effective prototype. While further improvements may need to be made, the tool will be a valuable contribution to improving the accuracy and clarity of scientific writing. Even if its performance is not flawless, I am optimistic that it will play an important role in fostering more transparent, accurate, and effective research communication.
+```{r detection_check data} 
+#| include: false
+library(readxl)
+detection_check <- read_excel("../data/detection_check/detection_checked.xlsx")
+
+agreement_table <- table(detection_check$agreement)
+agreement_1 <- agreement_table[['1']]
+agreement_2 <- agreement_table[['2']]
+agreement_3 <- agreement_table[['3']]
+agreement_3_FP <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FP", na.rm = TRUE)
+agreement_3_FN <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FN", na.rm = TRUE)
+
+keywords_table <- table(detection_check$disagreement_keyword)
+keywords_figure <- keywords_table[['figure note']]
+keywords_footnote <- keywords_table[['footnote']]
+keywords_formatting <- keywords_table[['formatting']]
+keywords_character <- keywords_table[['not sure; unusual character']]
+keywords_pagebreak <- keywords_table[['page break']]
+keywords_tablecontent <- keywords_table[['table content']]
+keywords_ns <- keywords_table[['n.s.']]
+keywords_ps <- keywords_table[['p_s']]
+```
+
+To see if my rule-based approach of using RegEx searches reliably detects all sentences with nonsignificant p values, I went through 25 random articles manually and copied each into a spreadsheet. I then compared how many of these were also caught by the automated approach. In total, I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant p value. Of these, the automated RegEx searches got `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) completely, and `r agreement_3_FN` partially due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). In `r agreement_3_FP` cases the automated approach yielded false positives in the sense that it extracted 'statements' from tables or figure notes. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the p value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant p value, and `r keywords_ps` were missed because the p value was written as '$p_s$'. Without these two mistakes (since the p value was written in a strange way and this would be relatively easy to fix) the overall agreement of automated and manual approach would be `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
+
+Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).^[I could not find one statement that was extracted automatically. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.]
+
+## 3.2 Classification Performance
+
+```{r BERT performance}
+#| include: false
+#### Load data
+classification_report <- read.csv("../data/model_performance/classification_report.csv")
+training_history <- read.csv("../data/model_performance/model_training_history.csv")
+test_predictions <-read.csv("../data/model_performance/test_predictions.csv")
+
+#### Data preparation
+  # Training History
+
+library(tidyr)
+library(dplyr)
+
+# Fill NAs in selected columns using the value from the previous row
+training_history <- training_history |>
+  fill(loss, grad_norm, learning_rate, .direction = "down")
+
+# Remove odd-numbered rows
+training_history <- training_history[seq(2, nrow(training_history), by = 2), ]
+
+#### Preparing inline citation
+  # Classification report
+library(papaja)
+precision_0 <- apa_p(classification_report$precision[1], 2)
+precision_1 <- apa_p(classification_report$precision[2], 2)
+recall_0 <- apa_p(classification_report$recall[1], 2)
+recall_1 <- apa_p(classification_report$recall[2], 2)
+F1_0 <- apa_p(classification_report$f1.score[1], 2)
+F1_1 <- apa_p(classification_report$f1.score[2], 2)
+
+macro_F1 <- apa_p(classification_report$f1.score[4], 2)
+
+n_total <- round(classification_report$support[5], 0)
+
+  # Training History
+n_epochs <- max(training_history$epoch)
+best_epoch <- training_history$epoch[training_history$eval_loss == min(training_history$eval_loss)]
+```
+
+
+
+![Training and Validation Loss Curve](../data/model_performance/loss_curve.png){#fig-2 width="6in" fig-alt="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model." apa-note="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model."}
+
+The different performance metrics can be found in @tbl-model-performance.
+
+```{r}
+#| label: tbl-model-performance
+#| message: false
+#| warning: false
+#| apa-note: Table of precision, recall and F1 score per category.
+#| ft-align: left
+#| tbl-cap: Model Performance
+library(tidyverse)
+library(flextable)
+
+tibble(
+  Label = c("Correct", "Incorrect"),
+  Precision = classification_report$precision[1:2],
+  Recall = classification_report$recall[1:2],
+  'F1 Score' = classification_report$f1.score[1:2]) %>% 
+  flextable() %>% 
+  theme_apa() 
+```
+
+![Confusion Matrix](../data/model_performance/confusion_matrix.png){#fig-3 width="5in" fig-alt="Confusion matrix of the performance of the final model." apa-note="Confusion matrix of the performance of the final model."}
+
+## 3.3 Correction Evaluation
+
+```{r}
+#| include: false
+llm_corrections <- read_excel("../data/llm_correction_check/llm_correction_unchecked.xlsx")
+```
+
+# 4 Discussion
+
+## 4.1 Summary of Findings
+
+## 4.2 Strengths of the Approach
+
+## 4.3 Limitations and Challenges
+
+## 4.4 Implication of the Tool
+
+## 4.5 Future Directions and Improvements
+
+# 5 Conclusion
 
 # References
 
@@ -164,3 +357,7 @@ Regardless of the final scope, I am confident that this project will yield a rob
 
 ::: {#refs}
 :::
+
+# Appendix
+
+XXX
