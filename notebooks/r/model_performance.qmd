@@ -17,10 +17,6 @@ editor: visual
 # devtools::install_github("scienceverse/papercheck")
 library(papercheck)
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-library(readr)
 library(showtext)
 ```
 
