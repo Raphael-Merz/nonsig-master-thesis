@@ -27,9 +27,7 @@ head(labeled_data)
 ### Counting key words
 
 ```{r}
-library(dplyr)
-library(tidyr)
-library(stringr)
+library(tidyverse)
 
 # Remove NA values
 keywords <- labeled_data$label_keywords[!is.na(labeled_data$label_keywords)]
