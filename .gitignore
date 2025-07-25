@@ -19,7 +19,6 @@ nonsig_venv/
 
 # Quarto
 _cache/
-*.html
 
 # Ignore notebook results
 notebooks/python/results/*
