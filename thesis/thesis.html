@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Raphael Merz">
+<meta name="keywords" content="p value, misinterpretation, automation, automated checks, RegEx, LLMs, BERT">
+<meta name="description" content="HYBRID NLP FOR CORRECTING p VALUE MISINTERPRETATIONS">
+
+<title>From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant p Values</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="thesis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="thesis_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="thesis_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="thesis_files/libs/quarto-html/popper.min.js"></script>
+<script src="thesis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="thesis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="thesis_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="thesis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="thesis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="thesis_files/libs/bootstrap/bootstrap-accd75c2bd871f03c4c02dcc9260e8c4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="thesis_files/libs/tabwid-1.1.3/tabwid.css" rel="stylesheet">
+
+<script src="thesis_files/libs/tabwid-1.1.3/tabwid.js"></script>
+
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="_extensions/wjschne/apaquarto/apa.css">
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">1 Introduction</a>
+  <ul class="collapse">
+  <li><a href="#common-misinterpretations-of-p-values" id="toc-common-misinterpretations-of-p-values" class="nav-link" data-scroll-target="#common-misinterpretations-of-p-values">1.1 Common Misinterpretations of <em>p</em> Values</a>
+  <ul class="collapse">
+  <li><a href="#the-big-four-p-value-misinterpretations" id="toc-the-big-four-p-value-misinterpretations" class="nav-link" data-scroll-target="#the-big-four-p-value-misinterpretations">1.1.1 The Big-Four <em>p</em> value misinterpretations</a></li>
+  </ul></li>
+  <li><a href="#research-on-nonsignificance-as-absence" id="toc-research-on-nonsignificance-as-absence" class="nav-link" data-scroll-target="#research-on-nonsignificance-as-absence">1.2 Research on nonsignificance as absence</a></li>
+  <li><a href="#possible-solutions" id="toc-possible-solutions" class="nav-link" data-scroll-target="#possible-solutions">1.3 Possible solutions</a></li>
+  <li><a href="#an-automated-human-factors-perspective" id="toc-an-automated-human-factors-perspective" class="nav-link" data-scroll-target="#an-automated-human-factors-perspective">1.4 An Automated Human-Factors Perspective</a></li>
+  </ul></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">2 Methods</a>
+  <ul class="collapse">
+  <li><a href="#statement-detection-classification-and-correction" id="toc-statement-detection-classification-and-correction" class="nav-link" data-scroll-target="#statement-detection-classification-and-correction">2.1 Statement Detection, Classification and Correction</a></li>
+  <li><a href="#validation-process-and-performance-metrics" id="toc-validation-process-and-performance-metrics" class="nav-link" data-scroll-target="#validation-process-and-performance-metrics">2.2 Validation Process and Performance Metrics</a></li>
+  <li><a href="#open-science" id="toc-open-science" class="nav-link" data-scroll-target="#open-science">2.4 Open Science</a></li>
+  </ul></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">3 Results</a>
+  <ul class="collapse">
+  <li><a href="#detection-accuracy" id="toc-detection-accuracy" class="nav-link" data-scroll-target="#detection-accuracy">3.1 Detection Accuracy</a></li>
+  <li><a href="#classification-performance" id="toc-classification-performance" class="nav-link" data-scroll-target="#classification-performance">3.2 Classification Performance</a></li>
+  <li><a href="#correction-evaluation" id="toc-correction-evaluation" class="nav-link" data-scroll-target="#correction-evaluation">3.3 Correction Evaluation</a></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">4 Discussion</a>
+  <ul class="collapse">
+  <li><a href="#summary-of-findings" id="toc-summary-of-findings" class="nav-link" data-scroll-target="#summary-of-findings">4.1 Summary of Findings</a></li>
+  <li><a href="#strengths-of-the-approach" id="toc-strengths-of-the-approach" class="nav-link" data-scroll-target="#strengths-of-the-approach">4.2 Strengths of the Approach</a></li>
+  <li><a href="#limitations-and-challenges" id="toc-limitations-and-challenges" class="nav-link" data-scroll-target="#limitations-and-challenges">4.3 Limitations and Challenges</a></li>
+  <li><a href="#implication-of-the-tool" id="toc-implication-of-the-tool" class="nav-link" data-scroll-target="#implication-of-the-tool">4.4 Implication of the Tool</a></li>
+  <li><a href="#future-directions-and-improvements" id="toc-future-directions-and-improvements" class="nav-link" data-scroll-target="#future-directions-and-improvements">4.5 Future Directions and Improvements</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">5 Conclusion</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="thesis.pdf"><i class="bi bi-file-pdf"></i>PDF (apaquarto)</a></li><li><a href="thesis.pdf"><i class="bi bi-file-pdf"></i>Typst (apaquarto)</a></li><li><a href="thesis.docx"><i class="bi bi-file-word"></i>MS Word (apaquarto)</a></li></ul></div></nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+
+
+
+<br>
+
+<br>
+
+<section id="title" class="level1 title unnumbered unlisted">
+<h1 class="title unnumbered unlisted">From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant <em>p</em> Values</h1>
+<div class="Author">
+<br>
+
+<p>Raphael Merz</p>
+<p>Department of Psychology, Ruhr University Bochum</p>
+</div>
+<br>
+
+<br>
+
+</section>
+<section id="author-note" class="level1 unnumbered unlisted AuthorNote">
+<h1 class="unnumbered unlisted AuthorNote">Author Note</h1>
+<p>Raphael Merz <img src="_extensions/wjschne/apaquarto/ORCID-iD_icon-vector.svg" id="orchid" class="img-fluid" style="width:4.23mm" alt="Orcid ID Logo: A green circle with white letters ID"> <a href="https://orcid.org/0000-0002-9474-3379">https://orcid.org/0000-0002-9474-3379</a></p>
+<p>Correspondence concerning this article should be addressed to Raphael Merz, Department of Psychology, Ruhr University Bochum, Bochum, Germany, Email: raphael.merz@rub.de</p>
+</section>
+<section id="abstract" class="level1 unnumbered unlisted AuthorNote">
+<h1 class="unnumbered unlisted AuthorNote">Abstract</h1>
+<div class="AbstractFirstParagraph">
+<p>Misinterpretations of <em>p</em> values remain a highly prevalent issue in scientific reporting, despite decades of educational efforts and reform initiatives. Among the most frequent and consequential misinterpretations is the conclusion that a statistically nonsignificant result (e.g., <em>p</em> &gt; .05) implies the absence of an effect – a claim not supported by the logic of null hypothesis significance testing (NHST). This project draws on a human factors perspective, arguing that automation can offer practical, scalable solutions to persistent statistical errors – comparable to how word processors flag potential spelling and grammar mistakes. This master’s thesis project proposes the development of an automated tool to detect, classify, and correct such misinterpretations using a combination of rule-based searches, large language models (LLMs), and machine learning classifiers. Building on the existing papercheck framework – an R package created to make automated checks of academic manuscripts easier and more systematic – the project aims to identify statements interpreting nonsignificant results, determine whether these interpretations are correct, and suggest improved phrasing if they are not. Initial detection will rely on rule-based text searches to locate candidate sentences, which will then be filtered and contextualized using LLMs. Classification of interpretations as correct or incorrect will be achieved through transformer-based classifiers (BERT, SciBERT, PubMedBERT), which will be evaluated against human-coded ground truth data. In its final form, the tool will serve as a writing assistant, a research instrument for large-scale corpus analysis, and an extension of papercheck. Ultimately, the goal is to reduce misinterpretations of nonsignificant findings and contribute to more accurate and informative scientific reporting.</p>
+</div>
+<p><em>Keywords</em>: p value, misinterpretation, automation, automated checks, RegEx, LLMs, BERT</p>
+</section>
+<section id="firstheader" class="level1 title unnumbered unlisted">
+<h1 class="title unnumbered unlisted">From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant <em>p</em> Values</h1>
+</section>
+<section id="introduction" class="level1">
+<h1>1 Introduction</h1>
+<p>Over the past decades, numerous articles have addressed common misinterpretations of <em>p</em> values in the context of standard null hypothesis significance testing (NHST) <span class="citation" data-cites="goodman08 greenland_etal16 schervish96">(<a href="#ref-goodman08" role="doc-biblioref">Goodman, 2008</a>; <a href="#ref-greenland_etal16" role="doc-biblioref">Greenland et al., 2016</a>; <a href="#ref-schervish96" role="doc-biblioref">Schervish, 1996</a>)</span>. Some go further, questioning the use of frequentist methods altogether <span class="citation" data-cites="edwards_etal63 wagenmakers07">(e.g., <a href="#ref-edwards_etal63" role="doc-biblioref">Edwards et al., 1963</a>; <a href="#ref-wagenmakers07" role="doc-biblioref">Wagenmakers, 2007</a>)</span>, while others propose refinements within the frequentist framework that aim to improve the informativeness of statistical inference <span class="citation" data-cites="isager_fitzgerald24 lakens_etal18">(e.g., <a href="#ref-isager_fitzgerald24" role="doc-biblioref">Isager &amp; Fitzgerald, 2024</a>; <a href="#ref-lakens_etal18" role="doc-biblioref">Lakens et al., 2018</a>)</span>. If you are a researcher writing a paper and want to interpret your results correctly, the solution seems simple: read these educational resources and revise your manuscript accordingly. Easy, right? Still, empirical studies consistently show that these misinterpretations remain widespread <span class="citation" data-cites="hoekstra_etal06 murphy_etal25">(e.g., <a href="#ref-hoekstra_etal06" role="doc-biblioref">Hoekstra et al., 2006</a>; <a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span>. Why is that? What makes interpreting <em>p</em> values so persistently difficult? Which practical solutions or promising approaches might help? And are some of the proposed ‘misinterpretation checklists’ perhaps less informative than their authors would hope?</p>
+<p>In this master’s thesis, I show how rule-based approaches, combined with natural language processing (NLP) can be used to automatically detect, classify, and correct these misinterpretation. I show this for the misinterpretation of statistically nonsignificant results as the absence of an effect because it is the most extensively researched misinterpretation of <em>p</em> values <span class="citation" data-cites="lakens21">(<a href="#ref-lakens21" role="doc-biblioref">Lakens, 2021</a>)</span>, and I have experience in classifying them from a previous project <span class="citation" data-cites="murphy_etal25">(<a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span>. That said, the general framework I propose can be easily adapted to address other misinterpretations, also beyond <em>p</em> values.</p>
+<section id="common-misinterpretations-of-p-values" class="level2">
+<h2 data-anchor-id="common-misinterpretations-of-p-values">1.1 Common Misinterpretations of <em>p</em> Values</h2>
+<p>The criticism of <em>p</em> values has become a prominent and recurring theme in discussions around scientific reform. From claims that they encourage dichotomous thinking <span class="citation" data-cites="hoekstra_etal06 amrhein_etal19">(<a href="#ref-amrhein_etal19" role="doc-biblioref">Amrhein et al., 2019</a>; <a href="#ref-hoekstra_etal06" role="doc-biblioref">Hoekstra et al., 2006</a>)</span> to arguments that they offer little informational value <span class="citation" data-cites="wagenmakers07">(<a href="#ref-wagenmakers07" role="doc-biblioref">Wagenmakers, 2007</a>)</span>, <em>p</em> values – and the broader framework of NHST – have been blamed for many of science’s replication problems <span class="citation" data-cites="mcshane_etal19">(<a href="#ref-mcshane_etal19" role="doc-biblioref">McShane et al., 2019</a>)</span>. On the other hand, many have also argued that NHST per se is not to blame for these problems, but rather how researchers (mis)use and (mis)interpret this tool <span class="citation" data-cites="lakens21">(<a href="#ref-lakens21" role="doc-biblioref">Lakens, 2021</a>)</span>. As a result, many researchers present whole collections of, in their view, common <em>p</em> value misinterpretations <span class="citation" data-cites="goodman08 greenland_etal16">(see, e.g., <a href="#ref-goodman08" role="doc-biblioref">Goodman, 2008</a>; <a href="#ref-greenland_etal16" role="doc-biblioref">Greenland et al., 2016</a>)</span>. Reviewing these, I come to the conclusion that there are four distinct types of misconceptions about <em>p</em> values that seem to be at play:</p>
+<p>XXX</p>
+<p>In my master thesis, I will zoom in on one specific misinterpretation: concluding <em>no effect</em> based on a statistically nonsignificant finding. Many studies have previously shown that this misinterpretation is and remains highly prevalent across time and sub-domains of psychology <span class="citation" data-cites="aczel_etal18 hoekstra_etal06 murphy_etal25">(e.g., <a href="#ref-aczel_etal18" role="doc-biblioref">Aczel et al., 2018</a>; <a href="#ref-hoekstra_etal06" role="doc-biblioref">Hoekstra et al., 2006</a>; <a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span>. In fact, in a recently published article investigating articles published in 2009, 2015, and 2021 across ten different psychology journals (mainly in the field of personality and social psychology), we estimated the prevalence of this misinterpretation in articles’ discussion sections to lie between 76.17% and 84.90% <span class="citation" data-cites="murphy_etal25">(<a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span>. This study highlights that the situation seems not to have greatly improved despite many researchers exploring new analysis techniques <span class="citation" data-cites="lakens_etal18">(e.g., <a href="#ref-lakens_etal18" role="doc-biblioref">Lakens et al., 2018</a>)</span> and continuous calls to reflect on interpretations of nonsignificant results <span class="citation" data-cites="mcshane_etal19">(e.g., <a href="#ref-mcshane_etal19" role="doc-biblioref">McShane et al., 2019</a>)</span>.</p>
+<section id="the-big-four-p-value-misinterpretations" class="level3">
+<h3 data-anchor-id="the-big-four-p-value-misinterpretations">1.1.1 The Big-Four <em>p</em> value misinterpretations</h3>
+<p>In preparation for this thesis project, I reviewed many of the previously reported misinterpretations of <em>p</em> values <span class="citation" data-cites="goodman08 greenland_etal16 lakens24a">(e.g., <a href="#ref-goodman08" role="doc-biblioref">Goodman, 2008</a>; <a href="#ref-greenland_etal16" role="doc-biblioref">Greenland et al., 2016</a>; chapter 1.7 from <a href="#ref-lakens24a" role="doc-biblioref">Lakens, 2024</a>)</span> and categorize them into four main groups:</p>
+<ul>
+<li><em>p</em> values as hypothesis probabilities</li>
+<li>Blending statistical and practical significance</li>
+<li><em>p</em> values as measures of replicability or error rates</li>
+<li>Technical misunderstandings about <em>p</em> values</li>
+</ul>
+<p>I argue that many of these published ‘misinterpretation checklists’ largely reiterate similar underlying misconceptions, often merely rephrasing what is, at its core, the same fundamental issue. While I will elaborate on this reasoning in the final thesis more, for the purposes of this proposal, I focus on the first category.</p>
+<p>This misinterpretation refers to the tendency of researchers to treat <em>p</em> values as if they represented the probability that the null (or alternative) hypothesis is true. Researchers who follow this misinterpretation may interpret <em>p</em> values below the conventional 5% threshold as evidence that <span class="math inline">H_1</span> is true (and <span class="math inline">H_0</span> is false), and nonsignificant <em>p</em> values as evidence that <span class="math inline">H_0</span> is true (and <span class="math inline">H_1</span> is false). In this project, I specifically focus on the latter mistake: interpreting a nonsignificant result as proof that no effect exists. This interpretation cannot be justified within the standard NHST framework, which defines the <em>p</em> value as the probability of observing the data, or something more extreme, assuming that the null hypothesis is true. There are, however, ways to overcome these misinterpretations, which I will discuss in the next section.</p>
+</section>
+</section>
+<section id="research-on-nonsignificance-as-absence" class="level2">
+<h2 data-anchor-id="research-on-nonsignificance-as-absence">1.2 Research on nonsignificance as absence</h2>
+<p>XXX <span class="citation" data-cites="aczel_etal18">Aczel et al. (<a href="#ref-aczel_etal18" role="doc-biblioref">2018</a>)</span>; <span class="citation" data-cites="hoekstra_etal06">Hoekstra et al. (<a href="#ref-hoekstra_etal06" role="doc-biblioref">2006</a>)</span>; <span class="citation" data-cites="murphy_etal25">Murphy et al. (<a href="#ref-murphy_etal25" role="doc-biblioref">2025</a>)</span>; and more</p>
+</section>
+<section id="possible-solutions" class="level2">
+<h2 data-anchor-id="possible-solutions">1.3 Possible solutions</h2>
+<p>This section will be more detailed in the final thesis, but I do want to briefly outline what I consider the most important solutions to the misinterpretation of nonsignificant results as evidence for the absence of an effect. One frequently suggested solution is to improve researchers’ statistical literacy through enhanced education, such as better statistics teaching at the undergraduate and graduate levels <span class="citation" data-cites="lakens21">(e.g., <a href="#ref-lakens21" role="doc-biblioref">Lakens, 2021</a>)</span>. However, as noted earlier, the prevalence of the misinterpretations I focus on does not seem to have substantially decreased, suggesting that calls for better education alone have not resolved the problem <span class="citation" data-cites="murphy_etal25">(<a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span>.</p>
+<p>A promising practical solution when conducting research involves the use of alternative analysis techniques, such as equivalence testing or minimum-effect tests. These methods allow researchers to test whether an effect is practically relevant and larger than a predefined smallest effect size of interest (SESOI) <span class="citation" data-cites="lakens_etal18">(<a href="#ref-lakens_etal18" role="doc-biblioref">Lakens et al., 2018</a>)</span>. In many contexts, such approaches might be more closely aligned with the substantive questions researchers aim to answer, namely whether an effect is meaningful in practice.</p>
+</section>
+<section id="an-automated-human-factors-perspective" class="level2">
+<h2 data-anchor-id="an-automated-human-factors-perspective">1.4 An Automated Human-Factors Perspective</h2>
+<p>These strategies also align with the argument made by <span class="citation" data-cites="lakens21">Lakens (<a href="#ref-lakens21" role="doc-biblioref">2021</a>)</span> that <em>p</em> value misinterpretations represent a human factors problem, requiring practical and easy-to-implement solutions. Everyday examples of such solutions include cars with automatic braking systems, word processors that flag spelling and grammar mistakes, or email clients that filter out malware and phishing attempts. Analogously, and recognizing that new analytic approaches may not be adopted overnight, automated checks for statistical misinterpretations offer a highly promising route. This perspective emphasizes that many statistical errors arise not from bad intentions or ignorance, but from cognitive limitations and suboptimal workflows.</p>
+<p>In the context of research, similar automated solutions are already gaining traction. For instance, the reference manager Zotero flags references to retracted papers <span class="citation" data-cites="stillman19">(<a href="#ref-stillman19" role="doc-biblioref">Stillman, 2019</a>)</span>. Statcheck <span class="citation" data-cites="nuijten_epskamp24">(<a href="#ref-nuijten_epskamp24" role="doc-biblioref">Nuijten &amp; Epskamp, 2024</a>)</span> automatically detects inconsistencies between reported test statistics and <em>p</em> values. Other tools, such as GRIM, GRIMMER, and SPRITE, identify impossible values in reported summary statistics <span class="citation" data-cites="heathers_etal18">(<a href="#ref-heathers_etal18" role="doc-biblioref">Heathers et al., 2018</a>)</span>, while Regcheck <span class="citation" data-cites="cummin_hussey24">(<a href="#ref-cummin_hussey24" role="doc-biblioref">Cummin &amp; Hussey, 2024</a>)</span> verifies the consistency between manuscripts and their preregistration documents.</p>
+<p>To make the process of checking manuscripts more systematic, <span class="citation" data-cites="debruine_lakens25">DeBruine and Lakens (<a href="#ref-debruine_lakens25" role="doc-biblioref">2025</a>)</span> developed papercheck, an R package and Shiny app, which allows users to run a battery of checks on research papers. These include statistical checks (e.g., identifying imprecisely reported <em>p</em> values) as well as general manuscript quality checks (e.g., verifying links to online repositories or consistency between in-text citations and reference lists). Papercheck can be used both for single articles (e.g., as writing assistance) and for batches of articles (e.g., for meta-scientific studies). Because this framework is actively maintained and continues to evolve, I plan to build my thesis project within the papercheck infrastructure.</p>
+<p>In summary, there are many reasons why <em>p</em> values remain difficult to interpret correctly. Empirical evidence suggests that misinterpretations of nonsignificant results remain highly prevalent <span class="citation" data-cites="murphy_etal25">(<a href="#ref-murphy_etal25" role="doc-biblioref">Murphy et al., 2025</a>)</span> This persistence highlights that improved education alone may not be sufficient. Drawing on a human factors perspective <span class="citation" data-cites="lakens21">(<a href="#ref-lakens21" role="doc-biblioref">Lakens, 2021</a>)</span>, practical solutions such as automated error-checking tools offer a promising avenue for addressing these challenges. In this project, I aim to develop an automated approach to detect misinterpretations of nonsignificant results, building on the existing papercheck framework <span class="citation" data-cites="debruine_lakens25">(<a href="#ref-debruine_lakens25" role="doc-biblioref">DeBruine &amp; Lakens, 2025</a>)</span>. In the following section, I outline the methods and approaches that I will explore to achieve this goal.</p>
+</section>
+</section>
+<section id="methods" class="level1">
+<h1>2 Methods</h1>
+<section id="statement-detection-classification-and-correction" class="level2">
+<h2 data-anchor-id="statement-detection-classification-and-correction">2.1 Statement Detection, Classification and Correction</h2>
+<p>Before describing the data used in this study, it is important to understand the three steps of the proposed framework. Statements from scientific articles needed to be reliably detected, classified, and finally corrected. For each step, I applied specific methods that were best suited to achieve the respective goal.</p>
+<p>To detect statements I searched used rule-based regular expressions (RegEx) and searched articles’s results sections for them. Effectively, RegEx searchers are just more complex Ctrl+F searches, where a user can also include optional charcters (e.g., ‘significant(ly)’ would catch both <em>significant</em> and <em>significantly</em>) and more complex rules (e.g., ‘not.{0,20}significant’ allows up to 20 characters between <em>not</em> and <em>significant</em>). Papercheck <span class="citation" data-cites="debruine_lakens25">(<a href="#ref-debruine_lakens25" role="doc-biblioref">DeBruine &amp; Lakens, 2025</a>)</span> has a module that detects almost all p values (see Section XXX) based on RegEx searches and I filtered these to just the ones equal to or above .05. I then expanded the extracted nonsignificant p values to the full sentence with papercheck and added +/- one sentence as context in case of extraction errors etc. (more on this in Section XXX).<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>In the next step, these statements (labeled as correct or incorrect by me; see Section XXX) were used to train several BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language <span class="citation" data-cites="devlin_etal19">(<a href="#ref-devlin_etal19" role="doc-biblioref">Devlin et al., 2019</a>)</span>. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in my classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains <span class="citation" data-cites="beltagy_etal19">(<a href="#ref-beltagy_etal19" role="doc-biblioref">Beltagy et al., 2019</a>)</span>. PubMedBERT goes even further, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database <span class="citation" data-cites="gu_etal22">(<a href="#ref-gu_etal22" role="doc-biblioref">Gu et al., 2022</a>)</span>. These models were evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing.</p>
+<p>Lastly, statements that have been labeled as being incorrect by a BERT classifier were sent to a LLM to get corrected. The full prompt is available in X was had X word plus the respective statement. In short, the model was instructed to only change any misinterpretations of nonsignificant p values as the absence of an effect and keep the rest of the statement. Do communicate with the LLM, I used papercheck <span class="citation" data-cites="debruine_lakens25">(<a href="#ref-debruine_lakens25" role="doc-biblioref">DeBruine &amp; Lakens, 2025</a>)</span>, which, in turn, uses the Groq API (available at <a href="https://groq.com/" class="uri">https://groq.com/</a>) to communicate with different LLMs. I used papercheck’s standard LLM, ‘llama-3.3-70b-versatile’ (as of 07/24/2025).</p>
+</section>
+<section id="validation-process-and-performance-metrics" class="level2">
+<h2 data-anchor-id="validation-process-and-performance-metrics">2.2 Validation Process and Performance Metrics</h2>
+<p>MAYBE (RE)MOVE The articles that were used in this study were part of papercheck’s sample library of 250 open access article from the journal Psychological Science, published between 2013 and 2024 (Median = 2021; IQA = [2018; 2022]). MAYBE (RE)MOVE</p>
+<p>To assess how well each of these three automated approaches worked, I compared each one to human ground truth and calculated appropriate measures of reliability between automated and human results.</p>
+<p>Firstly, to ensure that the statement detection process actually caught all statements with nonsignificant p values, I manually extracted all of these from 25 (10%) of the papercheck sample library’s 250 open access article from the journal Psychological Science. Articles were published between 2013 and 2024 (Median = 2021; IQA = [2018; 2022]). I then coded whether a statements I found were also extracted with the automated RegEx search.</p>
+<p>For the training of the BERT models and to assess their final performance I labeled all automatically extracted statements that were detected to be from an article’s Results section. This resulted in 960 statements in total. Of these, 420 were classified as correct and 352 were classified as incorrect. The remaining 188 statements were classified as not neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (83), because the statements were not complete enough to check their correctness (20), because they interpreted model fit indices and not the p value (20), because they were ‘false flags’ of nonsignificant p values (19), or due to a combination of these or other reasons (46).</p>
+<p>Lastly, I also also went through the 100 statements that were sent to an LLM to be corrected, to see if the ‘corrected’ statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with possible false positives from the automated classification.</p>
+<p>In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model; a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters; and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data).</p>
+<p>During training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. For final evaluation, I computed the fraction of correctly predicted positive cases among all predicted positives (precision), the fraction of correctly predicted positive cases among all actual positives (recall), and their harmonic mean (F1 score), separately for each class label. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).</p>
+</section>
+<section id="open-science" class="level2">
+<h2 data-anchor-id="open-science">2.4 Open Science</h2>
+<p>All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: XXX.com.</p>
+<p>This thesis was not preregistered as no inferential statistical tests were performed.</p>
+</section>
+</section>
+<section id="results" class="level1">
+<h1>3 Results</h1>
+<section id="detection-accuracy" class="level2">
+<h2 data-anchor-id="detection-accuracy">3.1 Detection Accuracy</h2>
+<p>To see if my rule-based approach of using RegEx searches reliably detects all sentences with nonsignificant p values, I went through 25 random articles manually and copied each into a spreadsheet. I then compared how many of these were also caught by the automated approach. In total, I detected 179 statements with a nonsignificant p value. Of these, the automated RegEx searches got 130 (73 %) completely, and 6 partially due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). In 3 cases the automated approach yielded false positives in the sense that it extracted ‘statements’ from tables or figure notes. Note, however, that the large majority of the total 49 missed statements were due to specific ways of writing (or not writing) the p value: 8 were missed because the authors wrote ‘n.s.’ instead of the nonsignificant p value, and 31 were missed because the p value was written as ‘<span class="math inline">p_s</span>’. Without these two mistakes (since the p value was written in a strange way and this would be relatively easy to fix) the overall agreement of automated and manual approach would be 93 %.</p>
+<p>Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (11 in total).<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+</section>
+<section id="classification-performance" class="level2">
+<h2 data-anchor-id="classification-performance">3.2 Classification Performance</h2>
+<div id="fig-2" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" data-apa-note="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." data-fignum="1" prefix="" alt="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." data-custom-style="FigureWithNote">
+<figure class="quarto-float quarto-float-fig figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-fig" id="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="FigureTitle" data-custom-style="FigureTitle">
+<p>Figure&nbsp;1</p>
+</div>
+<div class="Caption" data-custom-style="Caption">
+<p>Training and Validation Loss Curve</p>
+</div>
+</figcaption>
+<div aria-describedby="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../data/model_performance/loss_curve.png" class="img-fluid figure-img" style="width:6in" data-apa-note="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." alt="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model.">
+</div>
+</figure>
+</div>
+<div class="FigureNote" data-custom-style="FigureNote">
+<p><em>Note</em>. Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model.</p>
+</div>
+<p>The different performance metrics can be found in <a href="#tbl-model-performance" class="quarto-xref" aria-expanded="false">Table&nbsp;1</a>.</p>
+<div class="cell FigureWithNote" data-apa-note="Table of precision, recall and F1 score per category." data-ft-align="left" prefix="" data-tblnum="1" data-custom-style="FigureWithNote">
+<div id="tbl-model-performance" class="cell quarto-float quarto-figure quarto-figure-center" data-ft-align="left" data-apa-note="Table of precision, recall and F1 score per category." data-tblnum="1" prefix="">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="FigureTitle" data-custom-style="FigureTitle">
+<p>Table&nbsp;1</p>
+</div>
+<div class="Caption" data-custom-style="Caption">
+<p>Model Performance</p>
+</div>
+</figcaption>
+<div aria-describedby="tbl-model-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-2f2febe8{}.cl-2f27645a{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-2f2afef8{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-2f2b2306{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f2b2310{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f2b2311{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-2f2febe8"><thead><tr style="overflow-wrap:break-word;"><th class="cl-2f2b2306"><p class="cl-2f2afef8"><span class="cl-2f27645a">Label</span></p></th><th class="cl-2f2b2306"><p class="cl-2f2afef8"><span class="cl-2f27645a">Precision</span></p></th><th class="cl-2f2b2306"><p class="cl-2f2afef8"><span class="cl-2f27645a">Recall</span></p></th><th class="cl-2f2b2306"><p class="cl-2f2afef8"><span class="cl-2f27645a">F1 Score</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-2f2b2310"><p class="cl-2f2afef8"><span class="cl-2f27645a">Correct</span></p></td><td class="cl-2f2b2310"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td><td class="cl-2f2b2310"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td><td class="cl-2f2b2310"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2f2b2311"><p class="cl-2f2afef8"><span class="cl-2f27645a">Incorrect</span></p></td><td class="cl-2f2b2311"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td><td class="cl-2f2b2311"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td><td class="cl-2f2b2311"><p class="cl-2f2afef8"><span class="cl-2f27645a">0.90</span></p></td></tr></tbody></table></div>
+</div>
+</div>
+</figure>
+</div>
+<div class="FigureNote" data-custom-style="FigureNote">
+<p><em>Note</em>. Table of precision, recall and F1 score per category.</p>
+</div>
+</div>
+<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" data-apa-note="Confusion matrix of the performance of the final model." data-fignum="2" prefix="" alt="Confusion matrix of the performance of the final model." data-custom-style="FigureWithNote">
+<figure class="quarto-float quarto-float-fig figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-fig" id="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="FigureTitle" data-custom-style="FigureTitle">
+<p>Figure&nbsp;2</p>
+</div>
+<div class="Caption" data-custom-style="Caption">
+<p>Confusion Matrix</p>
+</div>
+</figcaption>
+<div aria-describedby="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../data/model_performance/confusion_matrix.png" class="img-fluid figure-img" style="width:5in" data-apa-note="Confusion matrix of the performance of the final model." alt="Confusion matrix of the performance of the final model.">
+</div>
+</figure>
+</div>
+<div class="FigureNote" data-custom-style="FigureNote">
+<p><em>Note</em>. Confusion matrix of the performance of the final model.</p>
+</div>
+</section>
+<section id="correction-evaluation" class="level2">
+<h2 data-anchor-id="correction-evaluation">3.3 Correction Evaluation</h2>
+<p>A total of 100 statements from the classifier training data (since I had human labels for them and knew whether they were correct or incorrect) were sent to an LLM with papercheck using the groq API (XXX Insert model here XXX). 80 of these were statements that were classified as incorrect by me (see XXX section). An additional 20 correct statement were also included, to check how the LLM would deal with false positives from the automated classification. In total, 85 % of these were correct. Interestingly, 2 of the previously correct statements got turned incorrect by the LLM. 18, on the other hand, remained correct. Similarly, the LLM actually corrected 67 of the 80 previously incorrect statements, whereas 13 remained incorrect. Note, however, that the LLM was instructed to change as much as necessary, but as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some really good/bad corrections can be found in <a href="#tbl-LLM-corrections" class="quarto-xref" aria-expanded="false">Table&nbsp;2</a>.</p>
+<div class="cell FigureWithNote" data-apa-note="Table of original and LLM-corrected statements and their respective labels." data-ft-align="left" prefix="" data-tblnum="2" data-custom-style="FigureWithNote">
+<div id="tbl-LLM-corrections" class="cell quarto-float quarto-figure quarto-figure-center" data-ft-align="left" data-apa-note="Table of original and LLM-corrected statements and their respective labels." data-tblnum="2" prefix="">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-LLM-corrections-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="FigureTitle" data-custom-style="FigureTitle">
+<p>Table&nbsp;2</p>
+</div>
+<div class="Caption" data-custom-style="Caption">
+<p>Examples of LLM Corrections</p>
+</div>
+</figcaption>
+<div aria-describedby="tbl-LLM-corrections-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-2f4c4d74{}.cl-2f42db90{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-2f46aa0e{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-2f46aa18{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1.2;background-color:transparent;}.cl-2f46cd68{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f46cd72{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f46cd73{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f46cd7c{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f46cd86{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2f46cd87{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-2f4c4d74"><thead><tr style="overflow-wrap:break-word;"><th class="cl-2f46cd68"><p class="cl-2f46aa0e"><span class="cl-2f42db90">Example</span></p></th><th class="cl-2f46cd68"><p class="cl-2f46aa0e"><span class="cl-2f42db90">Statement Type</span></p></th><th class="cl-2f46cd72"><p class="cl-2f46aa0e"><span class="cl-2f42db90">Statement</span></p></th><th class="cl-2f46cd68"><p class="cl-2f46aa0e"><span class="cl-2f42db90">Label</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Example 1 to 0</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Original</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">Only in the twin sample did a lower age of onset predict higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins).</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">LLM-Corrected</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">Only in the twin sample was there a significant association between a lower age of onset and higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins), whereas in musicians, the association was not statistically significant.</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Example 1 to 1</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Original</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">However, when the target was uncommitted, participants no longer preferred the seeker, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">LLM-Corrected</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">However, when the target was uncommitted, participants showed no significant preference for the seeker over the other target, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Example 0 to 0</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Original</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976).</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">LLM-Corrected</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976), indicating that the data do not provide sufficient evidence to reject the null hypothesis of no effect.</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-2f46cd86"><p class="cl-2f46aa18"><span class="cl-2f42db90">Example 0 to 1</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa18"><span class="cl-2f42db90">Original</span></p></td><td class="cl-2f46cd7c"><p class="cl-2f46aa18"><span class="cl-2f42db90">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], β = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], β = 0.08, p = .398.</span></p></td><td class="cl-2f46cd73"><p class="cl-2f46aa0e"><span class="cl-2f42db90">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2f46cd86"><p class="cl-2f46aa18"><span class="cl-2f42db90">LLM-Corrected</span></p></td><td class="cl-2f46cd87"><p class="cl-2f46aa18"><span class="cl-2f42db90">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], Î² = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], Î² = 0.08, p = .398, indicating that the relationship between leader narcissism and these outcomes may be negligible, but the data do not provide sufficient evidence to conclude that there is no relationship.</span></p></td><td class="cl-2f46cd86"><p class="cl-2f46aa0e"><span class="cl-2f42db90">1</span></p></td></tr></tbody></table></div>
+</div>
+</div>
+</figure>
+</div>
+<div class="FigureNote" data-custom-style="FigureNote">
+<p><em>Note</em>. Table of original and LLM-corrected statements and their respective labels.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="discussion" class="level1">
+<h1>4 Discussion</h1>
+<section id="summary-of-findings" class="level2">
+<h2 data-anchor-id="summary-of-findings">4.1 Summary of Findings</h2>
+</section>
+<section id="strengths-of-the-approach" class="level2">
+<h2 data-anchor-id="strengths-of-the-approach">4.2 Strengths of the Approach</h2>
+</section>
+<section id="limitations-and-challenges" class="level2">
+<h2 data-anchor-id="limitations-and-challenges">4.3 Limitations and Challenges</h2>
+</section>
+<section id="implication-of-the-tool" class="level2">
+<h2 data-anchor-id="implication-of-the-tool">4.4 Implication of the Tool</h2>
+</section>
+<section id="future-directions-and-improvements" class="level2">
+<h2 data-anchor-id="future-directions-and-improvements">4.5 Future Directions and Improvements</h2>
+</section>
+</section>
+<section id="conclusion" class="level1">
+<h1>5 Conclusion</h1>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<!-- References will auto-populate in the refs div below -->
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-aczel_etal18" class="csl-entry" role="listitem">
+Aczel, B., Palfi, B., Szollosi, A., Kovacs, M., Szaszi, B., Szecsi, P., Zrubka, M., Gronau, Q. F., Van Den Bergh, D., &amp; Wagenmakers, E.-J. (2018). Quantifying <span>Support</span> for the <span>Null Hypothesis</span> in <span>Psychology</span>: <span>An Empirical Investigation</span>. <em>Advances in Methods and Practices in Psychological Science</em>, <em>1</em>(3), 357–366. <a href="https://doi.org/10.1177/2515245918773742">https://doi.org/10.1177/2515245918773742</a>
+</div>
+<div id="ref-amrhein_etal19" class="csl-entry" role="listitem">
+Amrhein, V., Greenland, S., &amp; McShane, B. (2019). Scientists rise up against statistical significance. <em>Nature</em>, <em>567</em>(7748), 305–307. <a href="https://doi.org/10.1038/d41586-019-00857-9">https://doi.org/10.1038/d41586-019-00857-9</a>
+</div>
+<div id="ref-beltagy_etal19" class="csl-entry" role="listitem">
+Beltagy, I., Lo, K., &amp; Cohan, A. (2019). <em><span>SciBERT</span>: <span>A Pretrained Language Model</span> for <span>Scientific Text</span></em>. <a href="https://doi.org/10.48550/ARXIV.1903.10676">https://doi.org/10.48550/ARXIV.1903.10676</a>
+</div>
+<div id="ref-cummin_hussey24" class="csl-entry" role="listitem">
+Cummin, J., &amp; Hussey, I. (2024). <em><span>RegCheck</span>. <span>Compare</span> preregistrations with papers. <span>Instantly</span>.</em> Available at https://regcheck.app/.
+</div>
+<div id="ref-debruine_lakens25" class="csl-entry" role="listitem">
+DeBruine, L., &amp; Lakens, D. (2025). <em>Papercheck: <span>Check</span> scientific papers for best practices.</em> R package version 0.0.0.9033, available at https://scienceverse.github.io/papercheck/.
+</div>
+<div id="ref-devlin_etal19" class="csl-entry" role="listitem">
+Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). <span>BERT</span>: <span class="nocase">Pre-training</span> of <span>Deep Bidirectional Transformers</span> for <span>Language Understanding</span>. <em>Proceedings of the 2019 <span>Conference</span> of the <span>North</span></em>, 4171–4186. <a href="https://doi.org/10.18653/v1/N19-1423">https://doi.org/10.18653/v1/N19-1423</a>
+</div>
+<div id="ref-edwards_etal63" class="csl-entry" role="listitem">
+Edwards, W., Lindman, H., &amp; Savage, L. J. (1963). Bayesian statistical inference for psychological research. <em>Psychological Review</em>, <em>70</em>(3), 193–242. <a href="https://doi.org/10.1037/h0044139">https://doi.org/10.1037/h0044139</a>
+</div>
+<div id="ref-goodman08" class="csl-entry" role="listitem">
+Goodman, S. (2008). A <span>Dirty Dozen</span>: <span>Twelve P-Value Misconceptions</span>. <em>Seminars in Hematology</em>, <em>45</em>(3), 135–140. <a href="https://doi.org/10.1053/j.seminhematol.2008.04.003">https://doi.org/10.1053/j.seminhematol.2008.04.003</a>
+</div>
+<div id="ref-greenland_etal16" class="csl-entry" role="listitem">
+Greenland, S., Senn, S. J., Rothman, K. J., Carlin, J. B., Poole, C., Goodman, S. N., &amp; Altman, D. G. (2016). Statistical tests, <span>P</span> values, confidence intervals, and power: A guide to misinterpretations. <em>European Journal of Epidemiology</em>, <em>31</em>(4), 337–350. <a href="https://doi.org/10.1007/s10654-016-0149-3">https://doi.org/10.1007/s10654-016-0149-3</a>
+</div>
+<div id="ref-gu_etal22" class="csl-entry" role="listitem">
+Gu, Y., Tinn, R., Cheng, H., Lucas, M., Usuyama, N., Liu, X., Naumann, T., Gao, J., &amp; Poon, H. (2022). Domain-<span>Specific Language Model Pretraining</span> for <span>Biomedical Natural Language Processing</span>. <em>ACM Transactions on Computing for Healthcare</em>, <em>3</em>(1), 1–23. <a href="https://doi.org/10.1145/3458754">https://doi.org/10.1145/3458754</a>
+</div>
+<div id="ref-heathers_etal18" class="csl-entry" role="listitem">
+Heathers, J. A., Anaya, J., Van Der Zee, T., &amp; Brown, N. J. (2018). <em>Recovering data from summary statistics: <span>Sample Parameter Reconstruction</span> via <span>Iterative TEchniques</span> (<span>SPRITE</span>)</em>. <a href="https://doi.org/10.7287/peerj.preprints.26968v1">https://doi.org/10.7287/peerj.preprints.26968v1</a>
+</div>
+<div id="ref-hoekstra_etal06" class="csl-entry" role="listitem">
+Hoekstra, R., Finch, S., Kiers, H. A. L., &amp; Johnson, A. (2006). Probability as certainty: <span>Dichotomous</span> thinking and the misuse of p values. <em>Psychonomic Bulletin &amp; Review</em>, <em>13</em>(6), 1033–1037. <a href="https://doi.org/10.3758/BF03213921">https://doi.org/10.3758/BF03213921</a>
+</div>
+<div id="ref-isager_fitzgerald24" class="csl-entry" role="listitem">
+Isager, P. M., &amp; Fitzgerald, J. (2024). <em>Three-<span>Sided Testing</span> to <span>Establish Practical Significance</span>: <span>A Tutorial</span></em>. <a href="https://doi.org/10.31234/osf.io/8y925">https://doi.org/10.31234/osf.io/8y925</a>
+</div>
+<div id="ref-lakens21" class="csl-entry" role="listitem">
+Lakens, D. (2021). The <span>Practical Alternative</span> to the <span><em>p</em></span> <span>Value Is</span> the <span>Correctly Used</span> <span><em>p</em></span> <span>Value</span>. <em>Perspectives on Psychological Science</em>, <em>16</em>(3), 639–648. <a href="https://doi.org/10.1177/1745691620958012">https://doi.org/10.1177/1745691620958012</a>
+</div>
+<div id="ref-lakens24a" class="csl-entry" role="listitem">
+Lakens, D. (2024). <em>Improving <span>Your Statistical Inferences</span></em>.
+</div>
+<div id="ref-lakens_etal18" class="csl-entry" role="listitem">
+Lakens, D., Adolfi, F. G., Albers, C. J., Anvari, F., Apps, M. A. J., Argamon, S. E., Baguley, T., Becker, R. B., Benning, S. D., Bradford, D. E., Buchanan, E. M., Caldwell, A. R., Van Calster, B., Carlsson, R., Chen, S.-C., Chung, B., Colling, L. J., Collins, G. S., Crook, Z., … Zwaan, R. A. (2018). Justify your alpha. <em>Nature Human Behaviour</em>, <em>2</em>(3), 168–171. <a href="https://doi.org/10.1038/s41562-018-0311-x">https://doi.org/10.1038/s41562-018-0311-x</a>
+</div>
+<div id="ref-mcshane_etal19" class="csl-entry" role="listitem">
+McShane, B. B., Gal, D., Gelman, A., Robert, C., &amp; Tackett, J. L. (2019). Abandon <span>Statistical Significance</span>. <em>The American Statistician</em>, <em>73</em>(sup1), 235–245. <a href="https://doi.org/10.1080/00031305.2018.1527253">https://doi.org/10.1080/00031305.2018.1527253</a>
+</div>
+<div id="ref-murphy_etal25" class="csl-entry" role="listitem">
+Murphy, S. L., Merz, R., Reimann, L.-E., &amp; Fernández, A. (2025). Nonsignificance misinterpreted as an effect’s absence in psychology: Prevalence and temporal analyses. <em>Royal Society Open Science</em>, <em>12</em>(3), 242167. <a href="https://doi.org/10.1098/rsos.242167">https://doi.org/10.1098/rsos.242167</a>
+</div>
+<div id="ref-nuijten_epskamp24" class="csl-entry" role="listitem">
+Nuijten, M. B., &amp; Epskamp, S. (2024). <em>Statcheck: <span>Extract</span> statistics from articles and recompute p-values. <span>R</span> package version 1.5.0.</em> Web implementation at https://statcheck.io.
+</div>
+<div id="ref-schervish96" class="csl-entry" role="listitem">
+Schervish, M. J. (1996). <span><em>P</em></span> <span>Values</span>: <span>What They</span> are and <span>What They</span> are <span>Not</span>. <em>The American Statistician</em>, <em>50</em>(3), 203–206. <a href="https://doi.org/10.1080/00031305.1996.10474380">https://doi.org/10.1080/00031305.1996.10474380</a>
+</div>
+<div id="ref-stillman19" class="csl-entry" role="listitem">
+Stillman, D. (2019). <em>Retracted item notifications with <span>Retraction Watch</span> integration</em>. https://www.zotero.org/blog/retracted-item-notifications/.
+</div>
+<div id="ref-wagenmakers07" class="csl-entry" role="listitem">
+Wagenmakers, E.-J. (2007). A practical solution to the pervasive problems of <span><em>p</em></span> values. <em>Psychonomic Bulletin &amp; Review</em>, <em>14</em>(5), 779–804. <a href="https://doi.org/10.3758/BF03194105">https://doi.org/10.3758/BF03194105</a>
+</div>
+</div>
+</section>
+<section id="appendix" class="level1">
+<h1>Appendix</h1>
+<p>XXX</p>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>In a final tool, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>I could not find one statement that was extracted automatically. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

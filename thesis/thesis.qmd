@@ -38,23 +38,14 @@ format:
 a4paper: true
 ---
 
-```{r}
-#### Load results files ####
-
-classification_report_path <- "../data/model_performance/classification_report.csv" # path to classification_report.csv
-classification_report <- read.csv(classification_report_path)
-
-training_history_path <- "../data/model_performance/model_training_history.csv" # path to model_training_history.csv
-training_history <- read.csv(training_history_path)
-
-test_predictions_path <- "../data/model_performance/test_predictions.csv" # path to test_predictions.csv
-test_predictions <-read.csv(test_predictions_path)
-
-#### Load figures ####
-
-confusion_matrix <- "../../data/model_performance/confusion_matrix.png"
-
-loss_curve <- "../../data/model_performance/loss_curve.png"
+```{r load libraries}
+#| include: false
+library(papercheck)
+library(readxl)
+library(psych)
+library(tidyverse)
+library(flextable)
+library(papaja)
 ```
 
 # 1 Introduction
@@ -106,52 +97,24 @@ In summary, there are many reasons why *p* values remain difficult to interpret 
 
 # 2 Methods
 
-## 2.1 The Three-Step Framework
+## 2.1 Statement Detection, Classification and Correction
 
-The main components of this thesis are summarized in @fig-1. I conceptualize the project as progressing through three key steps to achieve the goal of full automation.
+Before describing the data used in this study, it is important to understand the three steps of the proposed framework. Statements from scientific articles needed to be reliably detected, classified, and finally corrected. For each step, I applied specific methods that were best suited to achieve the respective goal.
 
-First, statements about nonsignificance - whether they are interpreted correctly or not - must be reliably detected. That is, the chosen method should ideally identify all sentences that refer to nonsignificant results while minimizing false positives (i.e., sentences that do not actually interpret nonsignificance). From which sections of a manuscript these statements should be identified remains an open question. To keep the project scope manageable, the initial focus will be on statements that include an explicitly nonsignificant *p* value (for now, *p* > .05). If this approach proves successful, I plan to expand the scope to include related contextual statements. A more ambitious, potentially out-of-scope of this thesis, extension would be to incorporate interpretations in discussion sections that do not directly report *p* values but still convey conclusions about nonsignificance.
+To detect statements I searched used rule-based regular expressions (RegEx) and searched articles's results sections for them. Effectively, RegEx searchers are just more complex Ctrl+F searches, where a user can also include optional charcters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck [@debruine_lakens25] has a module that detects almost all p values (see Section XXX) based on RegEx searches and I filtered these to just the ones equal to or above .05. I then expanded the extracted nonsignificant p values to the full sentence with papercheck and added +/- one sentence as context in case of extraction errors etc. (more on this in Section XXX).[^1]
 
-Secondly, these statements must be classified as either correct (i.e., not suggesting the absence of an effect) or incorrect (i.e., suggesting the absence of an effect). @aczel_etal18 further categorized incorrect statements as either sample-level or population-level misinterpretations. For example, a sample-level misinterpretation might state that “groups were the same,” while a population-level one might claim that “men and women are the same”. Although this distinction is theoretically meaningful, for the purposes of detection and correction, both types are problematic and can be treated similarly in this context. However, the distinction may still offer valuable insights in meta-scientific contexts and will be explored as an optional classification system if time permits.
+[^1]: In a final tool, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.
 
-Lastly, there are three ways in which I plan to implement this tool: (A) as writing assistance, where users will receive suggested alternatives to problematic phrasings that avoid implying the absence of an effect. Initially, this will focus on sentences containing a nonsignificant *p* value, but later stages may also target surrounding contextual statements. (B) If the tool's performance is sufficient, it will be applied to a large collection of articles to estimate the prevalence of the misinterpretation across journals and time. (C) The tool will be added to the papercheck module list, allowing users to run automated checks via the existing Shiny app interface [see https://scienceverse.github.io/papercheck/reference/papercheck_app.html; @debruine_lakens25].
+In the next step, these statements (labeled as correct or incorrect by me; see Section XXX) were used to train several BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in my classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes even further, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing.
 
-```{r Figure 1}
-#### Load Fig_1 path
+Lastly, statements that have been labeled as being incorrect by a BERT classifier were sent to a LLM to get corrected. The full prompt is available in X was had X word plus the respective statement. In short, the model was instructed to only change any misinterpretations of nonsignificant p values as the absence of an effect and keep the rest of the statement. Do communicate with the LLM, I used papercheck [@debruine_lakens25], which, in turn, uses the Groq API (available at <https://groq.com/>) to communicate with different LLMs. I used papercheck's standard LLM, 'llama-3.3-70b-versatile' (as of 07/24/2025).
 
-fig_1 <- "XXX"
-
-# paste this below when fig is here
-#![Project Components](Fig1.png){#fig-1 width="5in" fig-alt="XXX" apa-note="Note here."}
-```
-
-### 2.1.1 Detection using RegEx
-
-Rule-based methods, such as regular expressions (RegEx), allow for targeted text searches based on specific patterns. The papercheck framework already supports RegEx-based screening. RegEx is particularly useful because it accommodates flexible matching, such as optional characters (e.g., to get “wellbeing” and “well-being”) or intervening words (e.g., capturing “did not [...] predict”).
-
-In early project stages, I will use rule-based approaches to identify a broad set of candidate statements that might interpret nonsignificant results (e.g., because they contain a *p* value above the 5% threshold). Because RegExes are inherently limited in semantic understanding, this approach is expected to yield many false positives but will help ensure that potential misinterpretations are not overlooked.
-
-### 2.1.2 Classification using BERT
-
-Finally, I will explore machine learning classifiers that categorize statements based on learned patterns. Compared to generative LLMs like ChatGPT or LLaMA, fine-tuned transformer-based classifiers like BERT [bidirectional encoder representations from transformers\; @devlin_etal19] have often demonstrated superior performance in knowledge-intensive tasks such as scientific text classification [e.g., @bucher_martini24].
-
-To evaluate the best-performing model for this use case, I will compare three transformer-based classifiers that vary in their training data and domain specialization. The original BERT model is a general-purpose language model pre-trained on BooksCorpus and English Wikipedia, making it suitable for a wide range of tasks but not optimized for scientific or technical language [@devlin_etal19]. SciBERT, by contrast, was specifically trained on a large corpus of scientific articles sourced from Semantic Scholar, with a focus on biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes further in domain specialization, having been trained exclusively on abstracts and full-texts of biomedical articles from the PubMed database [@gu_etal22]. These models will be tested on their ability to distinguish correct and incorrect interpretations of nonsignificant results in scientific writing.
-
-### 2.1.3 Correction using LLMs
-
-Next, I will use LLMs, which are already integrated into papercheck, to refine the initial statement detection. For example, an LLM can assess whether sentences containing the term "well-being" refer to psychological well-being. Similarly, I will use LLMs to evaluate whether flagged sentences genuinely interpret nonsignificant findings.
-
-In preliminary tests I conducted using data from @murphy_etal25, LLMs showed relatively low agreement with human coders when directly classifying statements as correct or incorrect. However, they may still play a valuable role in other stages of the process. Specifically, LLMs could help identify semantically related statements that interpret nonsignificant results (e.g., in an article’s discussion section) but do not contain an explicit *p* value  - an important step toward expanding beyond simple rule-based detection. Additionally, LLMs will be central to the writing assistance component of this project, where they can generate context-sensitive corrections and improved phrasings for misinterpreted statements.
-
-## 2.3 Sample and Validation Process
+## 2.2 Validation Process and Performance Metrics
 
 ```{r papercheck sample library descriptives}
 #| include: false
 #### Descriptive of the Sample Articles
-
-library(papercheck)
-
-sample_data <- psychsci
+sample_data <- papercheck::psychsci
 
 submission_years <- c()
 
@@ -191,9 +154,6 @@ submission_df$publication_year <- format(submission_df$date_parsed, "%Y")
 # Convert publication_year to numeric, in case it's still a character
 submission_df$publication_year <- as.numeric(submission_df$publication_year)
 
-# Load 'psych' package if not already loaded (needed for describe)
-library(psych)
-
 # Get full descriptive stats
 descriptives_article_year <- describe(submission_df$publication_year)
 
@@ -208,36 +168,52 @@ q1_article_year <- round(quartiles[[1]], 0)
 q3_article_year <- round(quartiles[[2]], 0)
 ```
 
-The articles that were used in this study were part of papercheck's sample library of 250 open access article from the journal Psychological Science, published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = [`r q1_article_year`; `r q3_article_year`]). 
+MAYBE (RE)MOVE The articles that were used in this study were part of papercheck's sample library of 250 open access article from the journal Psychological Science, published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = \[`r q1_article_year`; `r q3_article_year`\]). MAYBE (RE)MOVE
 
-Each stage of the pipeline — detection, classification, and correction — will be evaluated against human-coded ‘ground truth’ data to ensure the system functions as intended. To do this, I manually coded 
+To assess how well each of these three automated approaches worked, I compared each one to human ground truth and calculated appropriate measures of reliability between automated and human results.
 
-To begin, I will manually code Science articles that are included in the papercheck testing dataset (provided for users to explore key functions). The final number of articles will depend on how time-intensive the manual coding proves to be, which I will assess in early piloting. These human-coded statements will serve several purposes throughout the project.
+Firstly, to ensure that the statement detection process actually caught all statements with nonsignificant p values, I manually extracted all of these from 25 (10%) of the papercheck sample library's 250 open access article from the journal Psychological Science. Articles were published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = \[`r q1_article_year`; `r q3_article_year`\]). I then coded whether a statements I found were also extracted with the automated RegEx search.
 
-**Detection**. Firstly, I will evaluate whether the rule-based search approach reliably detects all relevant statements that interpret nonsignificant findings. To do this, I will manually review a selection of full-text papers and identify any relevant statements that were missed by the automated search. These insights will help refine the detection rules and improve the tool’s ability to capture a broad range of relevant phrasing patterns.
+```{r labeled data descriptives}
+#| include: false
+labeled_data <- read_excel("../data/training_data/labeled/labeled_data.xlsx")
 
-**Classification**. Secondly, the manually coded statements will be used to train and evaluate the BERT-based classifiers. For each model, I will report the confusion matrix values (true/false positives and negatives) and calculate the following standard performance metrics:
-- *Precision* measures the proportion of true positives out of all positive predictions, reflecting how many identified nonsignificant findings were correct.
-- *Recall* measures the proportion of true positives out of all actual positives, indicating how well the model identifies all relevant cases.
-- The *F1 score* is the harmonic mean of precision and recall, balancing both into a single metric, which is especially useful when there is an imbalance between the number of positive and negative cases.
+labeled_results <- labeled_data[labeled_data$section == "results",]
+labeled_results_99 <- labeled_results[labeled_results$label == -99,]
+labeled_results_0 <- labeled_results[labeled_results$label == 0,]
+labeled_results_1 <- labeled_results[labeled_results$label == 1,]
 
-**User feedback**. Finally, I will assess the quality of LLM-generated suggestions for revised, statistically accurate phrasing. A subset of these corrections will be evaluated against human judgment to verify if they provide genuinely helpful and correct feedback. This step ensures that the final tool supports better writing without introducing new errors.
+keywords_99 <- table(labeled_results_99$label_keywords)
 
-Following this validation and if the model achieves sufficient performance, the tool will be applied to a larger set of articles for analyses (see @fig-1), similar to the approach in @murphy_etal25. This potential phase will, however, be preregistered separately with its respective hypotheses and planned analyses.
+keywords_99_flaseflag <- keywords_99[['false flag']]+keywords_99[['figure note']]
+keywords_99_incomplete <- keywords_99[['incomplete']]+keywords_99[['more context needed']]
+keywords_99_marginally <- keywords_99[['marginally significant']]+keywords_99[['incorrect other; marginally significant']]
+keywords_99_modelfit <- keywords_99[['incomplete']]+keywords_99[['model fit; incomplete']]
+```
 
-## 2.4 Open Science
+For the training of the BERT models and to assess their final performance I labeled all automatically extracted statements that were detected to be from an article's Results section. This resulted in `r nrow(labeled_results)` statements in total. Of these, `r nrow(labeled_results_0)` were classified as correct and `r nrow(labeled_results_1)` were classified as incorrect. The remaining `r nrow(labeled_results_99)` statements were classified as not neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (`r keywords_99_marginally`), because the statements were not complete enough to check their correctness (`r keywords_99_incomplete`), because they interpreted model fit indices and not the p value (`r keywords_99_modelfit`), because they were 'false flags' of nonsignificant p values (`r keywords_99_flaseflag`), or due to a combination of these or other reasons (`r nrow(labeled_results_99)-keywords_99_flaseflag-keywords_99_incomplete-keywords_99_marginally-keywords_99_modelfit`).
 
-All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio) are available in this GitHub repository, together with instructions on how to set it up: XXX.com.
+Lastly, I also also went through the 100 statements that were sent to an LLM to be corrected, to see if the 'corrected' statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with possible false positives from the automated classification.
 
-This thesis was not preregistered as no inferential statistical tests were performed. 
+In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model; a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters; and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data).
+
+During training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. For final evaluation, I computed the fraction of correctly predicted positive cases among all predicted positives (precision), the fraction of correctly predicted positive cases among all actual positives (recall), and their harmonic mean (F1 score), separately for each class label. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).
+
+## 2.4 Software
+
+I used XXX
+
+All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: XXX.com.
+
+This thesis was not preregistered as no inferential statistical tests were performed.
 
 # 3 Results
 
 ## 3.1 Detection Accuracy
 
-```{r detection_check data} 
+```{r detection_check data}
 #| include: false
-library(readxl)
+
 detection_check <- read_excel("../data/detection_check/detection_checked.xlsx")
 
 agreement_table <- table(detection_check$agreement)
@@ -260,7 +236,9 @@ keywords_ps <- keywords_table[['p_s']]
 
 To see if my rule-based approach of using RegEx searches reliably detects all sentences with nonsignificant p values, I went through 25 random articles manually and copied each into a spreadsheet. I then compared how many of these were also caught by the automated approach. In total, I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant p value. Of these, the automated RegEx searches got `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) completely, and `r agreement_3_FN` partially due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). In `r agreement_3_FP` cases the automated approach yielded false positives in the sense that it extracted 'statements' from tables or figure notes. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the p value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant p value, and `r keywords_ps` were missed because the p value was written as '$p_s$'. Without these two mistakes (since the p value was written in a strange way and this would be relatively easy to fix) the overall agreement of automated and manual approach would be `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
 
-Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).^[I could not find one statement that was extracted automatically. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.]
+Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).[^2]
+
+[^2]: I could not find one statement that was extracted automatically. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.
 
 ## 3.2 Classification Performance
 
@@ -274,9 +252,6 @@ test_predictions <-read.csv("../data/model_performance/test_predictions.csv")
 #### Data preparation
   # Training History
 
-library(tidyr)
-library(dplyr)
-
 # Fill NAs in selected columns using the value from the previous row
 training_history <- training_history |>
   fill(loss, grad_norm, learning_rate, .direction = "down")
@@ -286,7 +261,6 @@ training_history <- training_history[seq(2, nrow(training_history), by = 2), ]
 
 #### Preparing inline citation
   # Classification report
-library(papaja)
 precision_0 <- apa_p(classification_report$precision[1], 2)
 precision_1 <- apa_p(classification_report$precision[2], 2)
 recall_0 <- apa_p(classification_report$recall[1], 2)
@@ -303,8 +277,6 @@ n_epochs <- max(training_history$epoch)
 best_epoch <- training_history$epoch[training_history$eval_loss == min(training_history$eval_loss)]
 ```
 
-
-
 ![Training and Validation Loss Curve](../data/model_performance/loss_curve.png){#fig-2 width="6in" fig-alt="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model." apa-note="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model."}
 
 The different performance metrics can be found in @tbl-model-performance.
@@ -316,8 +288,6 @@ The different performance metrics can be found in @tbl-model-performance.
 #| apa-note: Table of precision, recall and F1 score per category.
 #| ft-align: left
 #| tbl-cap: Model Performance
-library(tidyverse)
-library(flextable)
 
 tibble(
   Label = c("Correct", "Incorrect"),
@@ -325,7 +295,7 @@ tibble(
   Recall = classification_report$recall[1:2],
   'F1 Score' = classification_report$f1.score[1:2]) %>% 
   flextable() %>% 
-  theme_apa() 
+  flextable::theme_apa() 
 ```
 
 ![Confusion Matrix](../data/model_performance/confusion_matrix.png){#fig-3 width="5in" fig-alt="Confusion matrix of the performance of the final model." apa-note="Confusion matrix of the performance of the final model."}
@@ -346,25 +316,48 @@ n_1_correct <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correc
 n_1_incorrect  <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 1)
 ```
 
-A total of 100 statements from the classifier training data (since I had human labels for them and knew whether they were correct or incorrect) were sent to an LLM with papercheck using the groq API (XXX Insert model here XXX). 80 of these were statements that were classified as incorrect by me (see XXX section). An additional 20 correct statement were also included, to check how the LLM would deal with false positives from the automated classification. In total, `r round(100*(n_correct/(n_correct+n_incorrect)), 0)` % of these were correct. Interestingly,  `r n_0_incorrect` of the previously correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 previously incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change as much as necessary, but as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some really good/bad corrections can be found in @tbl-llm-corrections.
+A total of 100 statements from the classifier training data (since I had human labels for them and knew whether they were correct or incorrect) were sent to an LLM with papercheck using the groq API (XXX Insert model here XXX). 80 of these were statements that were classified as incorrect by me (see XXX section). An additional 20 correct statement were also included, to check how the LLM would deal with false positives from the automated classification. In total, `r round(100*(n_correct/(n_correct+n_incorrect)), 0)` % of these were correct. Interestingly, `r n_0_incorrect` of the previously correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 previously incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change as much as necessary, but as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some really good/bad corrections can be found in @tbl-LLM-corrections.
 
 ```{r}
-#| label: tbl-llm-corrections
+#| label: tbl-LLM-corrections
 #| message: false
 #| warning: false
 #| apa-note: Table of original and LLM-corrected statements and their respective labels.
 #| ft-align: left
 #| tbl-cap: Examples of LLM Corrections
-library(tidyverse)
-library(flextable)
 
-tibble(
-  'Original Statement' = c(llm_corrections$statement[10], llm_corrections$statement[60], llm_corrections$statement[79], llm_corrections$statement[80]),
-  'Original Label' = as.character(c(llm_corrections$label[10], llm_corrections$label[60], llm_corrections$label[79], llm_corrections$label[80]), 0),
-  'LLM-Corrected Statement' = c(llm_corrections$corrected[10], llm_corrections$corrected[60], llm_corrections$corrected[79], llm_corrections$corrected[80]),
-  'New Label' = as.character(c(llm_corrections$corrected_correct[10], llm_corrections$corrected_correct[60], llm_corrections$corrected_correct[79], llm_corrections$corrected_correct[80]), 0)) %>% 
-  flextable() %>% 
-  theme_apa()
+# Your selected example indices
+examples <- c(10, 60, 79, 80)
+
+# Fix 'ÃŽÂ²' in statements --> should be beta
+llm_corrections$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$statement)
+llm_corrections$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$corrected)
+
+# Create long format table
+df_long <- map_dfr(examples, function(i) {
+  example_label <- paste0("Example ", llm_corrections$label[i], " to ", llm_corrections$corrected_correct[i])
+  
+  tibble(
+    Example = rep(example_label, 2),
+    `Statement Type` = c("Original", "LLM-Corrected"),
+    Statement = c(llm_corrections$statement[i], llm_corrections$corrected[i]),
+    Label = as.character(c(llm_corrections$label[i], llm_corrections$corrected_correct[i]))
+  )
+})
+
+# Create the table with merged 'Example' cells
+df_long %>%
+  flextable() %>%
+  flextable::theme_apa() %>%
+  merge_v(j = ~Example) %>%       # Merge vertical cells in the 'Example' column
+  valign(j = ~Example, val = "center") %>%  # Align merged cells at the top
+  line_spacing(j = c(1:3), space = 1.2) %>%  # Set line spacing in Statement column
+  # fontsize(size = 9, part = "all") %>%
+width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
+width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
+width(j = 3, width = 4) %>%   # Column 3 (Statement)
+width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
+  # autofit()
 ```
 
 # 4 Discussion
