@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -47,15 +47,14 @@ div.csl-indent {
 
 
 <script src="thesis_files/libs/clipboard/clipboard.min.js"></script>
-<script src="thesis_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="thesis_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="thesis_files/libs/quarto-html/quarto.js"></script>
 <script src="thesis_files/libs/quarto-html/popper.min.js"></script>
 <script src="thesis_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="thesis_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="thesis_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="thesis_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="thesis_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="thesis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="thesis_files/libs/bootstrap/bootstrap-accd75c2bd871f03c4c02dcc9260e8c4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="thesis_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <link href="thesis_files/libs/tabwid-1.1.3/tabwid.css" rel="stylesheet">
 
 <script src="thesis_files/libs/tabwid-1.1.3/tabwid.js"></script>
@@ -108,7 +107,7 @@ window.Quarto = {
 <link rel="stylesheet" href="_extensions/wjschne/apaquarto/apa.css">
 </head>
 
-<body class="quarto-light">
+<body>
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
 <div id="quarto-sidebar-toc-left" class="sidebar toc-left">
@@ -190,6 +189,7 @@ window.Quarto = {
 </section>
 <section id="firstheader" class="level1 title unnumbered unlisted">
 <h1 class="title unnumbered unlisted">From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant <em>p</em> Values</h1>
+<p>(ref:apos) ;</p>
 </section>
 <section id="introduction" class="level1">
 <h1>1 Introduction</h1>
@@ -247,12 +247,12 @@ window.Quarto = {
 <p>For the training of the BERT models and to assess their final performance I labeled all automatically extracted statements that were detected to be from an article’s Results section. This resulted in 960 statements in total. Of these, 420 were classified as correct and 352 were classified as incorrect. The remaining 188 statements were classified as not neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (83), because the statements were not complete enough to check their correctness (20), because they interpreted model fit indices and not the p value (20), because they were ‘false flags’ of nonsignificant p values (19), or due to a combination of these or other reasons (46).</p>
 <p>Lastly, I also also went through the 100 statements that were sent to an LLM to be corrected, to see if the ‘corrected’ statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with possible false positives from the automated classification.</p>
 <p>In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model; a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters; and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data).</p>
-<p>During training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. For final evaluation, I computed the fraction of correctly predicted positive cases among all predicted positives (precision), the fraction of correctly predicted positive cases among all actual positives (recall), and their harmonic mean (F1 score), separately for each class label. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).</p>
+<p>During BERT training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. The model would have been trained on a maximum of 10 epochs, but training ended early if the model did not improve, as measured by the validation loss, for two epochs. For final evaluation, I computed the fraction of correctly predicted positive cases among all predicted positives (precision), the fraction of correctly predicted positive cases among all actual positives (recall), and their harmonic mean (F1 score), separately for each class label. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).</p>
 </section>
 <section id="software" class="level2">
 <h2 data-anchor-id="software">2.4 Software</h2>
-<p>All scripts for this thesis project were written in R [Version 4.5.0; <span class="citation" data-cites="rcoreteam25">Team (<a href="#ref-rcoreteam25" role="doc-biblioref">2025</a>)</span>] or Python [Version 3.12.10; <span class="citation" data-cites="python">(<a href="#ref-python" role="doc-biblioref"><strong>python?</strong></a>)</span>].</p>
-<p>In R, I used <em>papercheck</em> [Version 0.0.0.9049; <span class="citation" data-cites="R-papercheck">DeBruine and Lakens (<a href="#ref-R-papercheck" role="doc-biblioref">2025</a>)</span>] for accessing the 250 open access articles, preprocess them and for communication with the LLM, <em>readxl</em> [Version 1.4.5; <span class="citation" data-cites="R-readxl">Wickham and Bryan (<a href="#ref-R-readxl" role="doc-biblioref">2025</a>)</span>] to access Excel files in R, <em>psych</em> [Version 2.5.6; <span class="citation" data-cites="R-psych">William Revelle (<a href="#ref-R-psych" role="doc-biblioref">2025</a>)</span>] for calculating descriptive statistics, <em>tidyverse</em> [Version 2.0.0; <span class="citation" data-cites="R-tidyverse">Wickham et al. (<a href="#ref-R-tidyverse" role="doc-biblioref">2019</a>)</span>] for data preprocessing and visualization, and <em>flextable</em> [Version 0.9.9; <span class="citation" data-cites="R-flextable">Gohel and Skintzos (<a href="#ref-R-flextable" role="doc-biblioref">2025</a>)</span>], <em>papaja</em> [Version 0.1.3; <span class="citation" data-cites="R-papaja">Aust and Barth (<a href="#ref-R-papaja" role="doc-biblioref">2024</a>)</span>] and <em>showtext</em> [Version 0.9-7; <span class="citation" data-cites="R-showtext">Qiu and details. (<a href="#ref-R-showtext" role="doc-biblioref">2024</a>)</span>] to create APA-formatted tables.</p>
+<p>All scripts for this thesis project were written in R <span class="citation" data-cites="rcoreteam25">(Version 4.5.0(ref:apos) <a href="#ref-rcoreteam25" role="doc-biblioref">Team, 2025</a>)</span> or Python <span class="citation" data-cites="python">(Version 3.12.10(ref:apos) <a href="#ref-python" role="doc-biblioref">Python Software Foundation, 2025</a>)</span>.</p>
+<p>In R, I used <em>papercheck</em> <span class="citation" data-cites="R-papercheck">(Version 0.0.0.9049(ref:apos) <a href="#ref-R-papercheck" role="doc-biblioref">DeBruine &amp; Lakens, 2025</a>)</span> for accessing the 250 open access articles, preprocess them and for communication with the LLM, <em>readxl</em> <span class="citation" data-cites="R-readxl">(Version 1.4.5(ref:apos) <a href="#ref-R-readxl" role="doc-biblioref">Wickham &amp; Bryan, 2025</a>)</span> to access Excel files in R, <em>psych</em> <span class="citation" data-cites="R-psych">(Version 2.5.6(ref:apos) <a href="#ref-R-psych" role="doc-biblioref">William Revelle, 2025</a>)</span> for calculating descriptive statistics, <em>tidyverse</em> <span class="citation" data-cites="R-tidyverse">(Version 2.0.0(ref:apos) <a href="#ref-R-tidyverse" role="doc-biblioref">Wickham et al., 2019</a>)</span> for data preprocessing and visualization, and <em>flextable</em> <span class="citation" data-cites="R-flextable">(Version 0.9.9(ref:apos) <a href="#ref-R-flextable" role="doc-biblioref">Gohel &amp; Skintzos, 2025</a>)</span>, <em>papaja</em> <span class="citation" data-cites="R-papaja">(Version 0.1.3(ref:apos) <a href="#ref-R-papaja" role="doc-biblioref">Aust &amp; Barth, 2024</a>)</span> and <em>showtext</em> <span class="citation" data-cites="R-showtext">(Version 0.9-7(ref:apos) <a href="#ref-R-showtext" role="doc-biblioref">Qiu &amp; details., 2024</a>)</span> to create APA-formatted tables.</p>
 <p>The Python libraries used to train the BERT models can be found in this requirements file: LINK.</p>
 <p>All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: LINK.</p>
 <p>This thesis was not preregistered as no inferential statistical tests were performed.</p>
@@ -262,12 +262,13 @@ window.Quarto = {
 <h1>3 Results</h1>
 <section id="detection-accuracy" class="level2">
 <h2 data-anchor-id="detection-accuracy">3.1 Detection Accuracy</h2>
-<p>To see if my rule-based approach of using RegEx searches reliably detects all sentences with nonsignificant p values, I went through 25 random articles manually and copied each into a spreadsheet. I then compared how many of these were also caught by the automated approach. In total, I detected 179 statements with a nonsignificant p value. Of these, the automated RegEx searches got 130 (73 %) completely, and 6 partially due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). In 3 cases the automated approach yielded false positives in the sense that it extracted ‘statements’ from tables or figure notes. Note, however, that the large majority of the total 49 missed statements were due to specific ways of writing (or not writing) the p value: 8 were missed because the authors wrote ‘n.s.’ instead of the nonsignificant p value, and 31 were missed because the p value was written as ‘<span class="math inline">p_s</span>’. Without these two mistakes (since the p value was written in a strange way and this would be relatively easy to fix) the overall agreement of automated and manual approach would be 93 %.</p>
+<p>Manually going through 25 articles from papercheck’s sample library I detected 179 statements with a nonsignificant p value in total. The automated RegEx searches caught 130 (73 %) of these completely, and 6 partially (incompletely) due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). It also ‘found’ 3 false positives in the sense that it extracted ‘statements’ from tables or figure notes or ones that were false classified as coming from a results section. Note, however, that the large majority of the total 49 missed statements were due to specific ways of writing (or not writing) the p value: 8 were missed because the authors wrote ‘n.s.’ instead of the nonsignificant p value, and 31 were missed because the p value was written as ‘<span class="math inline">p_s</span>’. Without these two mistakes the overall agreement of automated and manual approach would have been 93 %.</p>
 <p>Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (11 in total).<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 </section>
 <section id="classification-performance" class="level2">
 <h2 data-anchor-id="classification-performance">3.2 Classification Performance</h2>
-<div id="fig-2" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" data-apa-note="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." prefix="" data-fignum="1" alt="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." data-custom-style="FigureWithNote">
+<p><a href="#fig-2" class="quarto-xref" aria-expanded="false">Figure&nbsp;1</a> and <span class="citation" data-cites="loss-curves">(<a href="#ref-loss-curves" role="doc-biblioref"><strong>loss-curves?</strong></a>)</span> shows the training and validation loss of the three BERT models over their training. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+<div id="fig-2" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" prefix="" alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss." data-fignum="1" data-apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss." data-custom-style="FigureWithNote">
 <figure class="quarto-float quarto-float-fig figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-fig" id="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="FigureTitle" data-custom-style="FigureTitle">
@@ -278,16 +279,16 @@ window.Quarto = {
 </div>
 </figcaption>
 <div aria-describedby="fig-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../data/model_performance/loss_curve.png" class="img-fluid figure-img" style="width:6in" data-apa-note="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model." alt="Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model.">
+<embed src="../data/model_performance/loss_curve/loss_combined.pdf" class="img-fluid" style="width:6in" data-apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss." alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss.">
 </div>
 </figure>
 </div>
 <div class="FigureNote" data-custom-style="FigureNote">
-<p><em>Note</em>. Curve of the training and validation loss across the all 7 epochs. The model after epoch 5 was chosen as the final model.</p>
+<p><em>Note</em>. Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss.</p>
 </div>
-<p>The different performance metrics can be found in <a href="#tbl-model-performance" class="quarto-xref" aria-expanded="false">Table&nbsp;1</a>.</p>
-<div class="cell FigureWithNote" data-apa-note="Table of precision, recall and F1 score per category." data-ft-align="left" prefix="" data-tblnum="1" data-custom-style="FigureWithNote">
-<div id="tbl-model-performance" class="cell quarto-float quarto-figure quarto-figure-center" data-apa-note="Table of precision, recall and F1 score per category." data-tblnum="1" prefix="" data-ft-align="left">
+<p>The different performance metrics can be found in <a href="#tbl-model-performance" class="quarto-xref" aria-expanded="false">Table&nbsp;1</a>. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+<div class="cell FigureWithNote" data-apa-note="Table of precision, recall and F1 score per model and class." data-ft-align="left" prefix="" data-tblnum="1" data-custom-style="FigureWithNote">
+<div id="tbl-model-performance" class="cell quarto-float quarto-figure quarto-figure-center" prefix="" data-ft-align="left" data-tblnum="1" data-apa-note="Table of precision, recall and F1 score per model and class.">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="FigureTitle" data-custom-style="FigureTitle">
@@ -299,16 +300,16 @@ window.Quarto = {
 </figcaption>
 <div aria-describedby="tbl-model-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div class="tabwid"><style>.cl-8c5dd848{}.cl-8c569470{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-8c59965c{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-8c59b3bc{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c59b3c6{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c59b3c7{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-8c5dd848"><thead><tr style="overflow-wrap:break-word;"><th class="cl-8c59b3bc"><p class="cl-8c59965c"><span class="cl-8c569470">Label</span></p></th><th class="cl-8c59b3bc"><p class="cl-8c59965c"><span class="cl-8c569470">Precision</span></p></th><th class="cl-8c59b3bc"><p class="cl-8c59965c"><span class="cl-8c569470">Recall</span></p></th><th class="cl-8c59b3bc"><p class="cl-8c59965c"><span class="cl-8c569470">F1 Score</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-8c59b3c6"><p class="cl-8c59965c"><span class="cl-8c569470">Correct</span></p></td><td class="cl-8c59b3c6"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td><td class="cl-8c59b3c6"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td><td class="cl-8c59b3c6"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-8c59b3c7"><p class="cl-8c59965c"><span class="cl-8c569470">Incorrect</span></p></td><td class="cl-8c59b3c7"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td><td class="cl-8c59b3c7"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td><td class="cl-8c59b3c7"><p class="cl-8c59965c"><span class="cl-8c569470">0.90</span></p></td></tr></tbody></table></div>
+<div class="tabwid"><style>.cl-d7144002{}.cl-d70a5f6a{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-d70e6b0a{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-d70e9116{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d70e912a{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d70e912b{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d70e9134{width:0.75in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-d7144002"><thead><tr style="overflow-wrap:break-word;"><th class="cl-d70e9116"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"> </span></p></th><th colspan="3" class="cl-d70e9116"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">BERT</span></p></th><th colspan="3" class="cl-d70e9116"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">SciBERT</span></p></th><th colspan="3" class="cl-d70e9116"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">PubMedBERT</span></p></th></tr><tr style="overflow-wrap:break-word;"><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"> </span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Precision</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Recall</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">F1 score</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Precision</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Recall</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">F1 score</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Precision</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Recall</span></p></th><th class="cl-d70e912a"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">F1 score</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Correct Class</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.82</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.86</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.82</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.86</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.82</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.86</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Incorrect Class</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.85</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.81</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.83</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.85</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.81</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.83</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.85</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.81</span></p></td><td class="cl-d70e912b"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.83</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">Macro F1 score</span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a"></span></p></td><td class="cl-d70e9134"><p class="cl-d70e6b0a"><span class="cl-d70a5f6a">.84</span></p></td></tr></tbody></table></div>
 </div>
 </div>
 </figure>
 </div>
 <div class="FigureNote" data-custom-style="FigureNote">
-<p><em>Note</em>. Table of precision, recall and F1 score per category.</p>
+<p><em>Note</em>. Table of precision, recall and F1 score per model and class.</p>
 </div>
 </div>
-<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" data-apa-note="Confusion matrix of the performance of the final model." prefix="" data-fignum="2" alt="Confusion matrix of the performance of the final model." data-custom-style="FigureWithNote">
+<div id="fig-3" class="quarto-float quarto-figure quarto-figure-center FigureWithNote" prefix="" alt="Confusion matrices of the three trained BERT models." data-fignum="2" data-apa-note="Confusion matrices of the three trained BERT models." data-custom-style="FigureWithNote">
 <figure class="quarto-float quarto-float-fig figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-fig" id="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="FigureTitle" data-custom-style="FigureTitle">
@@ -319,19 +320,20 @@ window.Quarto = {
 </div>
 </figcaption>
 <div aria-describedby="fig-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../data/model_performance/confusion_matrix.png" class="img-fluid figure-img" style="width:5in" data-apa-note="Confusion matrix of the performance of the final model." alt="Confusion matrix of the performance of the final model.">
+<embed src="../data/model_performance/confusion_matrix/confusion_matrix_combined.pdf" class="img-fluid" style="width:5in" data-apa-note="Confusion matrices of the three trained BERT models." alt="Confusion matrices of the three trained BERT models.">
 </div>
 </figure>
 </div>
 <div class="FigureNote" data-custom-style="FigureNote">
-<p><em>Note</em>. Confusion matrix of the performance of the final model.</p>
+<p><em>Note</em>. Confusion matrices of the three trained BERT models.</p>
 </div>
+<p>Examples of incorrectly classified statements: Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
 </section>
 <section id="correction-evaluation" class="level2">
 <h2 data-anchor-id="correction-evaluation">3.3 Correction Evaluation</h2>
-<p>A total of 100 statements from the classifier training data (since I had human labels for them and knew whether they were correct or incorrect) were sent to an LLM with papercheck using the groq API (XXX Insert model here XXX). 80 of these were statements that were classified as incorrect by me (see XXX section). An additional 20 correct statement were also included, to check how the LLM would deal with false positives from the automated classification. In total, 85 % of these were correct. Interestingly, 2 of the previously correct statements got turned incorrect by the LLM. 18, on the other hand, remained correct. Similarly, the LLM actually corrected 67 of the 80 previously incorrect statements, whereas 13 remained incorrect. Note, however, that the LLM was instructed to change as much as necessary, but as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some really good/bad corrections can be found in <a href="#tbl-LLM-corrections" class="quarto-xref" aria-expanded="false">Table&nbsp;2</a>.</p>
+<p>Of the 100 statements that the LLM was instructed to correct 85 were correct. Interestingly, 2 of the 20 already correct statements got turned incorrect by the LLM. 18, on the other hand, remained correct. Similarly, the LLM actually corrected 67 of the 80 incorrect statements, whereas 13 remained incorrect. Note, however, that the LLM was instructed to change (as much as necessary, but) as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some good/bad corrections can be found in <a href="#tbl-LLM-corrections" class="quarto-xref" aria-expanded="false">Table&nbsp;2</a>.</p>
 <div class="cell FigureWithNote" data-apa-note="Table of original and LLM-corrected statements and their respective labels." data-ft-align="left" prefix="" data-tblnum="2" data-custom-style="FigureWithNote">
-<div id="tbl-LLM-corrections" class="cell quarto-float quarto-figure quarto-figure-center" data-apa-note="Table of original and LLM-corrected statements and their respective labels." data-tblnum="2" prefix="" data-ft-align="left">
+<div id="tbl-LLM-corrections" class="cell quarto-float quarto-figure quarto-figure-center" prefix="" data-ft-align="left" data-tblnum="2" data-apa-note="Table of original and LLM-corrected statements and their respective labels.">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-LLM-corrections-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="FigureTitle" data-custom-style="FigureTitle">
@@ -343,7 +345,7 @@ window.Quarto = {
 </figcaption>
 <div aria-describedby="tbl-LLM-corrections-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div class="tabwid"><style>.cl-8c772532{}.cl-8c6efa2e{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-8c71ffee{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-8c71fff8{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1.2;background-color:transparent;}.cl-8c721b1e{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c721b28{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c721b29{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c721b2a{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c721b32{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-8c721b33{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-8c772532"><thead><tr style="overflow-wrap:break-word;"><th class="cl-8c721b1e"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">Example</span></p></th><th class="cl-8c721b1e"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">Statement Type</span></p></th><th class="cl-8c721b28"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">Statement</span></p></th><th class="cl-8c721b1e"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">Label</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Example 1 to 0</span></p></td><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Original</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Only in the twin sample did a lower age of onset predict higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins).</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">LLM-Corrected</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Only in the twin sample was there a significant association between a lower age of onset and higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins), whereas in musicians, the association was not statistically significant.</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Example 1 to 1</span></p></td><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Original</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">However, when the target was uncommitted, participants no longer preferred the seeker, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">LLM-Corrected</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">However, when the target was uncommitted, participants showed no significant preference for the seeker over the other target, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Example 0 to 0</span></p></td><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Original</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976).</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">LLM-Corrected</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976), indicating that the data do not provide sufficient evidence to reject the null hypothesis of no effect.</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-8c721b32"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Example 0 to 1</span></p></td><td class="cl-8c721b29"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">Original</span></p></td><td class="cl-8c721b2a"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], β = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], β = 0.08, p = .398.</span></p></td><td class="cl-8c721b29"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-8c721b32"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">LLM-Corrected</span></p></td><td class="cl-8c721b33"><p class="cl-8c71fff8"><span class="cl-8c6efa2e">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], Î² = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], Î² = 0.08, p = .398, indicating that the relationship between leader narcissism and these outcomes may be negligible, but the data do not provide sufficient evidence to conclude that there is no relationship.</span></p></td><td class="cl-8c721b32"><p class="cl-8c71ffee"><span class="cl-8c6efa2e">1</span></p></td></tr></tbody></table></div>
+<div class="tabwid"><style>.cl-d7d61fa6{}.cl-d7cc96a2{font-family:'Times New Roman';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-d7d13bbc{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 2;background-color:transparent;}.cl-d7d13bc6{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1.2;background-color:transparent;}.cl-d7d15cdc{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d7d15ce6{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0.75pt solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d7d15cf0{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d7d15cf1{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d7d15cfa{width:0.7in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-d7d15cfb{width:4in;background-color:transparent;vertical-align: middle;border-bottom: 0.75pt solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-d7d61fa6"><thead><tr style="overflow-wrap:break-word;"><th class="cl-d7d15cdc"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">Example</span></p></th><th class="cl-d7d15cdc"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">Statement Type</span></p></th><th class="cl-d7d15ce6"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">Statement</span></p></th><th class="cl-d7d15cdc"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">Label</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Example 1 to 0</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Original</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Only in the twin sample did a lower age of onset predict higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins).</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">LLM-Corrected</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Only in the twin sample was there a significant association between a lower age of onset and higher levels of melody discrimination (β = -0.09, p = .23 in musicians; β = -0.05, p = .001 in twins), whereas in musicians, the association was not statistically significant.</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Example 1 to 1</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Original</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">However, when the target was uncommitted, participants no longer preferred the seeker, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">LLM-Corrected</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">However, when the target was uncommitted, participants showed no significant preference for the seeker over the other target, p = .849, d = -0.03, rating both targets equally.</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">1</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Example 0 to 0</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Original</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976).</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">LLM-Corrected</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">The years-of-experience single effect was not significant (β = 0.001, 95% CI = [-0.07, 0.07], p = .976), indicating that the data do not provide sufficient evidence to reject the null hypothesis of no effect.</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td rowspan="2" class="cl-d7d15cfa"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Example 0 to 1</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">Original</span></p></td><td class="cl-d7d15cf1"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], β = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], β = 0.08, p = .398.</span></p></td><td class="cl-d7d15cf0"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">0</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-d7d15cfa"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">LLM-Corrected</span></p></td><td class="cl-d7d15cfb"><p class="cl-d7d13bc6"><span class="cl-d7cc96a2">By contrast, leader narcissism levels were not significantly related to follower-perceived leader authority, b = 0.04, 95% CI = [-0.04, 0.13], Î² = 0.10, p = .304, and effectiveness, b = 0.04, 95% CI = [-0.06, 0.14], Î² = 0.08, p = .398, indicating that the relationship between leader narcissism and these outcomes may be negligible, but the data do not provide sufficient evidence to conclude that there is no relationship.</span></p></td><td class="cl-d7d15cfa"><p class="cl-d7d13bbc"><span class="cl-d7cc96a2">1</span></p></td></tr></tbody></table></div>
 </div>
 </div>
 </figure>
@@ -442,6 +444,9 @@ Murphy, S. L., Merz, R., Reimann, L.-E., &amp; Fernández, A. (2025). Nonsignifi
 <div id="ref-nuijten_epskamp24" class="csl-entry" role="listitem">
 Nuijten, M. B., &amp; Epskamp, S. (2024). <em>Statcheck: <span>Extract</span> statistics from articles and recompute p-values. <span>R</span> package version 1.5.0.</em> Web implementation at https://statcheck.io.
 </div>
+<div id="ref-python" class="csl-entry" role="listitem">
+Python Software Foundation. (2025). <em>Python: A dynamic, open source programming language</em> [Manual]. Python Software Foundation.
+</div>
 <div id="ref-R-showtext" class="csl-entry" role="listitem">
 Qiu, Y., &amp; details., authors/contributors. of the included software. S. file A. for. (2024). <em>Showtext: <span>Using</span> fonts more easily in <span>R</span> graphs</em> [Manual]. <a href="https://doi.org/10.32614/CRAN.package.showtext">https://doi.org/10.32614/CRAN.package.showtext</a>
 </div>
@@ -483,235 +488,232 @@ William Revelle. (2025). <em>Psych: <span>Procedures</span> for psychological, p
 </section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
-  window.document.addEventListener("DOMContentLoaded", function (event) {
-    const isCodeAnnotation = (el) => {
-      for (const clz of el.classList) {
-        if (clz.startsWith('code-annotation-')) {                     
-          return true;
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
       }
-      return false;
-    }
-    const onCopySuccess = function(e) {
-      // button target
-      const button = e.trigger;
-      // don't keep focus
-      button.blur();
-      // flash "checked"
-      button.classList.add('code-copy-button-checked');
-      var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
-      let tooltip;
-      if (window.bootstrap) {
-        button.setAttribute("data-bs-toggle", "tooltip");
-        button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
-        tooltip = new bootstrap.Tooltip(button, 
-          { trigger: "manual", 
-            customClass: "code-copy-button-tooltip",
-            offset: [0, -8]});
-        tooltip.show();    
-      }
-      setTimeout(function() {
-        if (tooltip) {
-          tooltip.hide();
-          button.removeAttribute("data-bs-title");
-          button.removeAttribute("data-bs-toggle");
-          button.removeAttribute("data-bs-placement");
-        }
-        button.setAttribute("title", currentTitle);
-        button.classList.remove('code-copy-button-checked');
-      }, 1000);
-      // clear code selection
-      e.clearSelection();
-    }
-    const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
-        }
-        return codeEl.innerText;
-    }
-    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-      text: getTextToCopy
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
-    clipboard.on('success', onCopySuccess);
-    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-        text: getTextToCopy,
-        container: window.document.getElementById('quarto-embedded-source-code-modal')
-      });
-      clipboardModal.on('success', onCopySuccess);
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
-      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
-      var isInternal = (href) => {
-          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-      }
-      // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-      for (var i=0; i<links.length; i++) {
-        const link = links[i];
-        if (!isInternal(link.href)) {
-          // undo the damage that might have been done by quarto-nav.js in the case of
-          // links that we want to consider external
-          if (link.dataset.originalHref !== undefined) {
-            link.href = link.dataset.originalHref;
-          }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
         }
       }
-    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-      const config = {
-        allowHTML: true,
-        maxWidth: 500,
-        delay: 100,
-        arrow: false,
-        appendTo: function(el) {
-            return el.parentElement;
-        },
-        interactive: true,
-        interactiveBorder: 10,
-        theme: 'quarto',
-        placement: 'bottom-start',
-      };
-      if (contentFn) {
-        config.content = contentFn;
-      }
-      if (onTriggerFn) {
-        config.onTrigger = onTriggerFn;
-      }
-      if (onUntriggerFn) {
-        config.onUntrigger = onUntriggerFn;
-      }
-      window.tippy(el, config); 
     }
-    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-    for (var i=0; i<noterefs.length; i++) {
-      const ref = noterefs[i];
-      tippyHover(ref, function() {
-        // use id or data attribute instead here
-        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-        try { href = new URL(href).hash; } catch {}
-        const id = href.replace(/^#\/?/, "");
-        const note = window.document.getElementById(id);
-        if (note) {
-          return note.innerHTML;
-        } else {
-          return "";
-        }
-      });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
     }
-    const xrefs = window.document.querySelectorAll('a.quarto-xref');
-    const processXRef = (id, note) => {
-      // Strip column container classes
-      const stripColumnClz = (el) => {
-        el.classList.remove("page-full", "page-columns");
-        if (el.children) {
-          for (const child of el.children) {
-            stripColumnClz(child);
-          }
-        }
-      }
-      stripColumnClz(note)
-      if (id === null || id.startsWith('sec-')) {
-        // Special case sections, only their first couple elements
-        const container = document.createElement("div");
-        if (note.children && note.children.length > 2) {
-          container.appendChild(note.children[0].cloneNode(true));
-          for (let i = 1; i < note.children.length; i++) {
-            const child = note.children[i];
-            if (child.tagName === "P" && child.innerText === "") {
-              continue;
-            } else {
-              container.appendChild(child.cloneNode(true));
-              break;
-            }
-          }
-          if (window.Quarto?.typesetMath) {
-            window.Quarto.typesetMath(container);
-          }
-          return container.innerHTML
-        } else {
-          if (window.Quarto?.typesetMath) {
-            window.Quarto.typesetMath(note);
-          }
-          return note.innerHTML;
-        }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
       } else {
-        // Remove any anchor links if they are present
-        const anchorLink = note.querySelector('a.anchorjs-link');
-        if (anchorLink) {
-          anchorLink.remove();
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
         }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
         if (window.Quarto?.typesetMath) {
           window.Quarto.typesetMath(note);
         }
-        if (note.classList.contains("callout")) {
-          return note.outerHTML;
-        } else {
-          return note.innerHTML;
-        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
       }
     }
-    for (var i=0; i<xrefs.length; i++) {
-      const xref = xrefs[i];
-      tippyHover(xref, undefined, function(instance) {
-        instance.disable();
-        let url = xref.getAttribute('href');
-        let hash = undefined; 
-        if (url.startsWith('#')) {
-          hash = url;
-        } else {
-          try { hash = new URL(url).hash; } catch {}
-        }
-        if (hash) {
-          const id = hash.replace(/^#\/?/, "");
-          const note = window.document.getElementById(id);
-          if (note !== null) {
-            try {
-              const html = processXRef(id, note.cloneNode(true));
-              instance.setContent(html);
-            } finally {
-              instance.enable();
-              instance.show();
-            }
-          } else {
-            // See if we can fetch this
-            fetch(url.split('#')[0])
-            .then(res => res.text())
-            .then(html => {
-              const parser = new DOMParser();
-              const htmlDoc = parser.parseFromString(html, "text/html");
-              const note = htmlDoc.getElementById(id);
-              if (note !== null) {
-                const html = processXRef(id, note);
-                instance.setContent(html);
-              } 
-            }).finally(() => {
-              instance.enable();
-              instance.show();
-            });
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
           }
         } else {
-          // See if we can fetch a full url (with no hash to target)
-          // This is a special case and we should probably do some content thinning / targeting
-          fetch(url)
+          // See if we can fetch this
+          fetch(url.split('#')[0])
           .then(res => res.text())
           .then(html => {
             const parser = new DOMParser();
             const htmlDoc = parser.parseFromString(html, "text/html");
-            const note = htmlDoc.querySelector('main.content');
+            const note = htmlDoc.getElementById(id);
             if (note !== null) {
-              // This should only happen for chapter cross references
-              // (since there is no id in the URL)
-              // remove the first header
-              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
-                note.children[0].remove();
-              }
-              const html = processXRef(null, note);
+              const html = processXRef(id, note);
               instance.setContent(html);
             } 
           }).finally(() => {
@@ -719,161 +721,185 @@ William Revelle. (2025). <em>Psych: <span>Procedures</span> for psychological, p
             instance.show();
           });
         }
-      }, function(instance) {
-      });
-    }
-        let selectedAnnoteEl;
-        const selectorForAnnotation = ( cell, annotation) => {
-          let cellAttr = 'data-code-cell="' + cell + '"';
-          let lineAttr = 'data-code-annotation="' +  annotation + '"';
-          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
-          return selector;
-        }
-        const selectCodeLines = (annoteEl) => {
-          const doc = window.document;
-          const targetCell = annoteEl.getAttribute("data-target-cell");
-          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
-          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
-          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
-          const lineIds = lines.map((line) => {
-            return targetCell + "-" + line;
-          })
-          let top = null;
-          let height = null;
-          let parent = null;
-          if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
-            }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
-            }
-            selectedAnnoteEl = annoteEl;
-          }
-        };
-        const unselectCodeLines = () => {
-          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
-          elementsIds.forEach((elId) => {
-            const div = window.document.getElementById(elId);
-            if (div) {
-              div.remove();
-            }
-          });
-          selectedAnnoteEl = undefined;
-        };
-          // Handle positioning of the toggle
-      window.addEventListener(
-        "resize",
-        throttle(() => {
-          elRect = undefined;
-          if (selectedAnnoteEl) {
-            selectCodeLines(selectedAnnoteEl);
-          }
-        }, 10)
-      );
-      function throttle(fn, ms) {
-      let throttle = false;
-      let timer;
-        return (...args) => {
-          if(!throttle) { // first call gets through
-              fn.apply(this, args);
-              throttle = true;
-          } else { // all the others get throttled
-              if(timer) clearTimeout(timer); // cancel #2
-              timer = setTimeout(() => {
-                fn.apply(this, args);
-                timer = throttle = false;
-              }, ms);
-          }
-        };
-      }
-        // Attach click handler to the DT
-        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
-        for (const annoteDlNode of annoteDls) {
-          annoteDlNode.addEventListener('click', (event) => {
-            const clickedEl = event.target;
-            if (clickedEl !== selectedAnnoteEl) {
-              unselectCodeLines();
-              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
-              if (activeEl) {
-                activeEl.classList.remove('code-annotation-active');
-              }
-              selectCodeLines(clickedEl);
-              clickedEl.classList.add('code-annotation-active');
-            } else {
-              // Unselect the line
-              unselectCodeLines();
-              clickedEl.classList.remove('code-annotation-active');
-            }
-          });
-        }
-    const findCites = (el) => {
-      const parentEl = el.parentElement;
-      if (parentEl) {
-        const cites = parentEl.dataset.cites;
-        if (cites) {
-          return {
-            el,
-            cites: cites.split(' ')
-          };
-        } else {
-          return findCites(el.parentElement)
-        }
       } else {
-        return undefined;
-      }
-    };
-    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-    for (var i=0; i<bibliorefs.length; i++) {
-      const ref = bibliorefs[i];
-      const citeInfo = findCites(ref);
-      if (citeInfo) {
-        tippyHover(citeInfo.el, function() {
-          var popup = window.document.createElement('div');
-          citeInfo.cites.forEach(function(cite) {
-            var citeDiv = window.document.createElement('div');
-            citeDiv.classList.add('hanging-indent');
-            citeDiv.classList.add('csl-entry');
-            var biblioDiv = window.document.getElementById('ref-' + cite);
-            if (biblioDiv) {
-              citeDiv.innerHTML = biblioDiv.innerHTML;
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
             }
-            popup.appendChild(citeDiv);
-          });
-          return popup.innerHTML;
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
         });
       }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
     }
-  });
-  </script>
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
 </div> <!-- /content -->
 
 

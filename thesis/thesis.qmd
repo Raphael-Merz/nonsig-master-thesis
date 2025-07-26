@@ -201,9 +201,9 @@ During BERT training, I computed the training loss (sum of errors between model 
 
 ## 2.4 Software
 
-All scripts for this thesis project were written in R [Version 4.5.0; @rcoreteam25] or Python [Version 3.12.10; @python].
+All scripts for this thesis project were written in R [Version 4.5.0\; @rcoreteam25] or Python [Version 3.12.10\; @python].
 
-In R, I used *papercheck* [Version 0.0.0.9049; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9; @R-flextable], *papaja* [Version 0.1.3; @R-papaja] and *showtext* [Version 0.9-7; @R-showtext] to create APA-formatted tables.
+In R, I used *papercheck* [Version 0.0.0.9049\; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5\; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6\; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0\; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9\; @R-flextable], *papaja* [Version 0.1.3\; @R-papaja] and *showtext* [Version 0.9-7\; @R-showtext] to create APA-formatted tables.
 
 The Python libraries used to train the BERT models can be found in this requirements file: LINK.
 
@@ -248,42 +248,140 @@ Most of the other misses were due to pdf formatting issues like figures, tables,
 
 ```{r BERT performance}
 #| include: false
+#################################
+#####                       #####
+#####     Standard BERT     #####
+#####                       #####
+#################################
+
 #### Load data
-classification_report <- read.csv("../data/model_performance/classification_report.csv")
-training_history <- read.csv("../data/model_performance/model_training_history.csv")
-test_predictions <-read.csv("../data/model_performance/test_predictions.csv")
+classification_report_BERT <- read.csv("../data/model_performance/classification_report/BERT.csv")
+training_history_BERT <- read.csv("../data/model_performance/model_training_history/BERT.csv")
+test_predictions_BERT <-read.csv("../data/model_performance/test_predictions/BERT.csv")
 
 #### Data preparation
   # Training History
 
 # Fill NAs in selected columns using the value from the previous row
-training_history <- training_history |>
+training_history_BERT <- training_history_BERT |>
   fill(loss, grad_norm, learning_rate, .direction = "down")
 
 # Remove odd-numbered rows
-training_history <- training_history[seq(2, nrow(training_history), by = 2), ]
+training_history_BERT <- training_history_BERT[seq(2, nrow(training_history_BERT), by = 2), ]
 
 #### Preparing inline citation
   # Classification report
-precision_0 <- apa_p(classification_report$precision[1], 2)
-precision_1 <- apa_p(classification_report$precision[2], 2)
-recall_0 <- apa_p(classification_report$recall[1], 2)
-recall_1 <- apa_p(classification_report$recall[2], 2)
-F1_0 <- apa_p(classification_report$f1.score[1], 2)
-F1_1 <- apa_p(classification_report$f1.score[2], 2)
+precision_0_BERT <- apa_p(classification_report_BERT$precision[1], 2)
+precision_1_BERT <- apa_p(classification_report_BERT$precision[2], 2)
+recall_0_BERT <- apa_p(classification_report_BERT$recall[1], 2)
+recall_1_BERT <- apa_p(classification_report_BERT$recall[2], 2)
+F1_0_BERT <- apa_p(classification_report_BERT$f1.score[1], 2)
+F1_1_BERT <- apa_p(classification_report_BERT$f1.score[2], 2)
 
-macro_F1 <- apa_p(classification_report$f1.score[4], 2)
+macro_F1_BERT <- apa_p(classification_report_BERT$f1.score[4], 2)
 
-n_total <- round(classification_report$support[5], 0)
+n_total <- round(classification_report_BERT$support[5], 0)
 
   # Training History
-n_epochs <- max(training_history$epoch)
-best_epoch <- training_history$epoch[training_history$eval_loss == min(training_history$eval_loss)]
+n_epochs_BERT <- max(training_history_BERT$epoch)
+best_epoch_BERT <- training_history_BERT$epoch[training_history_BERT$eval_loss == min(training_history_BERT$eval_loss)]
+
+#################################
+#####                       #####
+#####        SciBERT        #####
+#####                       #####
+#################################
+
+#### Load data
+classification_report_SciBERT <- read.csv("../data/model_performance/classification_report/SciBERT.csv")
+training_history_SciBERT <- read.csv("../data/model_performance/model_training_history/SciBERT.csv")
+test_predictions_SciBERT <-read.csv("../data/model_performance/test_predictions/SciBERT.csv")
+
+#### Data preparation
+  # Training History
+
+# Fill NAs in selected columns using the value from the previous row
+training_history_SciBERT <- training_history_SciBERT |>
+  fill(loss, grad_norm, learning_rate, .direction = "down")
+
+# Remove odd-numbered rows
+training_history_SciBERT <- training_history_SciBERT[seq(2, nrow(training_history_SciBERT), by = 2), ]
+
+#### Preparing inline citation
+  # Classification report
+precision_0_SciBERT <- apa_p(classification_report_SciBERT$precision[1], 2)
+precision_1_SciBERT <- apa_p(classification_report_SciBERT$precision[2], 2)
+recall_0_SciBERT <- apa_p(classification_report_SciBERT$recall[1], 2)
+recall_1_SciBERT <- apa_p(classification_report_SciBERT$recall[2], 2)
+F1_0_SciBERT <- apa_p(classification_report_SciBERT$f1.score[1], 2)
+F1_1_SciBERT <- apa_p(classification_report_SciBERT$f1.score[2], 2)
+
+macro_F1_SciBERT <- apa_p(classification_report_SciBERT$f1.score[4], 2)
+
+n_total <- round(classification_report_SciBERT$support[5], 0)
+
+  # Training History
+n_epochs_SciBERT <- max(training_history_SciBERT$epoch)
+best_epoch_SciBERT <- training_history_SciBERT$epoch[training_history_SciBERT$eval_loss == min(training_history_SciBERT$eval_loss)]
+
+#################################
+#####                       #####
+#####      PubMedBERT       #####
+#####                       #####
+#################################
+
+#### Load data
+classification_report_PubMedBERT <- read.csv("../data/model_performance/classification_report/PubMedBERT.csv")
+training_history_PubMedBERT <- read.csv("../data/model_performance/model_training_history/PubMedBERT.csv")
+test_predictions_PubMedBERT <-read.csv("../data/model_performance/test_predictions/PubMedBERT.csv")
+
+#### Data preparation
+  # Training History
+
+# Fill NAs in selected columns using the value from the previous row
+training_history_PubMedBERT <- training_history_PubMedBERT |>
+  fill(loss, grad_norm, learning_rate, .direction = "down")
+
+# Remove odd-numbered rows
+training_history_PubMedBERT <- training_history_PubMedBERT[seq(2, nrow(training_history_PubMedBERT), by = 2), ]
+
+#### Preparing inline citation
+  # Classification report
+precision_0_PubMedBERT <- apa_p(classification_report_PubMedBERT$precision[1], 2)
+precision_1_PubMedBERT <- apa_p(classification_report_PubMedBERT$precision[2], 2)
+recall_0_PubMedBERT <- apa_p(classification_report_PubMedBERT$recall[1], 2)
+recall_1_PubMedBERT <- apa_p(classification_report_PubMedBERT$recall[2], 2)
+F1_0_PubMedBERT <- apa_p(classification_report_PubMedBERT$f1.score[1], 2)
+F1_1_PubMedBERT <- apa_p(classification_report_PubMedBERT$f1.score[2], 2)
+
+macro_F1_PubMedBERT <- apa_p(classification_report_PubMedBERT$f1.score[4], 2)
+
+n_total <- round(classification_report_PubMedBERT$support[5], 0)
+
+  # Training History
+n_epochs_PubMedBERT <- max(training_history_PubMedBERT$epoch)
+best_epoch_PubMedBERT <- training_history_PubMedBERT$epoch[training_history_PubMedBERT$eval_loss == min(training_history_PubMedBERT$eval_loss)]
 ```
 
 @fig-2 shows the training and validation loss of the three BERT models over their training. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
 
-![Training and Validation Loss Curve](../data/model_performance/loss_curve.png){#fig-2 width="6in" fig-alt="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model." apa-note="Curve of the training and validation loss across the all `r n_epochs` epochs. The model after epoch `r best_epoch` was chosen as the final model."}
+```{r Combine model loss curves into one figure}
+#| include: false
+library(magick)
+
+# Read all three PDFs (first page of each)
+loss_curve_bert     <- image_read_pdf("../data/model_performance/loss_curve/BERT.pdf")
+loss_curve_scibert  <- image_read_pdf("../data/model_performance/loss_curve/SciBERT.pdf")
+loss_curve_pubmed   <- image_read_pdf("../data/model_performance/loss_curve/PubMedBERT.pdf")
+
+# Combine them horizontally
+combined <- image_append(c(loss_curve_bert, loss_curve_scibert, loss_curve_pubmed))
+
+# Save to a new PDF
+image_write(combined, path = "../data/model_performance/loss_curve/loss_combined.pdf", format = "pdf")
+```
+
+![Training and Validation Loss Curve](../data/model_performance/loss_curve/loss_combined.pdf){#fig-2 width="6in" fig-alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss." apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch ´r best_epoch_BERT´, ´r best_epoch_SciBERT´, and ´r best_epoch_PubMedBERT´ respectively, based on the minumum validation loss."}
 
 The different performance metrics can be found in @tbl-model-performance. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
 
@@ -291,20 +389,58 @@ The different performance metrics can be found in @tbl-model-performance. Lorem 
 #| label: tbl-model-performance
 #| message: false
 #| warning: false
-#| apa-note: Table of precision, recall and F1 score per category.
+#| apa-note: Table of precision, recall and F1 score per model and class.
 #| ft-align: left
 #| tbl-cap: Model Performance
 
-tibble(
-  Label = c("Correct", "Incorrect"),
-  Precision = classification_report$precision[1:2],
-  Recall = classification_report$recall[1:2],
-  'F1 Score' = classification_report$f1.score[1:2]) %>% 
-  flextable() %>% 
-  flextable::theme_apa() 
+# Create the data
+tbl <- tibble(
+  ' '            = c("Correct Class", "Incorrect Class", "Macro F1 score"),
+  'BERT 1'       = c(precision_0_BERT, precision_1_BERT, ""),
+  'BERT 2'       = c(recall_0_BERT, recall_1_BERT, ""),
+  'BERT 3'       = c(F1_0_BERT, F1_1_BERT, macro_F1_BERT),
+  'SciBERT 1'    = c(precision_0_SciBERT, precision_1_SciBERT, ""),
+  'SciBERT 2'    = c(recall_0_SciBERT, recall_1_SciBERT, ""),
+  'SciBERT 3'    = c(F1_0_SciBERT, F1_1_SciBERT, macro_F1_SciBERT),
+  'PubMedBERT 1' = c(precision_0_PubMedBERT, precision_1_PubMedBERT, ""),
+  'PubMedBERT 2' = c(recall_0_PubMedBERT, recall_1_PubMedBERT, ""),
+  'PubMedBERT 3' = c(F1_0_PubMedBERT, F1_1_PubMedBERT, macro_F1_PubMedBERT)
+)
+
+# Create the flextable with grouped headers
+tbl %>%
+  flextable() %>%
+  set_header_labels(
+    `BERT 1` = "Precision", `BERT 2` = "Recall", `BERT 3` = "F1 score",
+    `SciBERT 1` = "Precision", `SciBERT 2` = "Recall", `SciBERT 3` = "F1 score",
+    `PubMedBERT 1` = "Precision", `PubMedBERT 2` = "Recall", `PubMedBERT 3` = "F1 score"
+  ) %>%
+  add_header_row(
+  values = c(" ", "BERT", "SciBERT", "PubMedBERT"),
+  colwidths = c(1, 3, 3, 3)
+  ) %>%
+  flextable::fit_to_width(max_width = 6.5) %>%
+  fontsize(size = 11, part = "all") %>%
+  flextable::theme_apa()
 ```
 
-![Confusion Matrix](../data/model_performance/confusion_matrix.png){#fig-3 width="5in" fig-alt="Confusion matrix of the performance of the final model." apa-note="Confusion matrix of the performance of the final model."}
+```{r Combine model confusion matrices into one figure}
+#| include: false
+library(magick)
+
+# Read all three PDFs (first page of each)
+confusion_matrix_bert     <- image_read_pdf("../data/model_performance/confusion_matrix/BERT.pdf")
+confusion_matrix_scibert  <- image_read_pdf("../data/model_performance/confusion_matrix/SciBERT.pdf")
+confusion_matrix_pubmed   <- image_read_pdf("../data/model_performance/confusion_matrix/PubMedBERT.pdf")
+
+# Combine them horizontally
+combined <- image_append(c(confusion_matrix_bert, confusion_matrix_scibert, confusion_matrix_pubmed))
+
+# Save to a new PDF
+image_write(combined, path = "../data/model_performance/confusion_matrix/confusion_matrix_combined.pdf", format = "pdf")
+```
+
+![Confusion Matrix](../data/model_performance/confusion_matrix/confusion_matrix_combined.pdf){#fig-3 width="6.5in" fig-alt="Confusion matrices of the three trained BERT models." apa-note="Confusion matrices of the three trained BERT models."}
 
 Examples of incorrectly classified statements: Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
 
@@ -324,18 +460,18 @@ n_1_correct <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correc
 n_1_incorrect  <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 1)
 ```
 
-Of the 100 statements that the LLM was instructed to correct `r n_correct` were correct. Interestingly, `r n_0_incorrect` of the 20 already correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change (as much as necessary, but) as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some good/bad corrections can be found in @tbl-LLM-corrections.
+Of the 100 statements that the LLM was instructed to correct `r n_correct` were correct. Interestingly, `r n_0_incorrect` of the 20 already correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change (as much as necessary, but) as little as possible about the original statement. For some statements, this meant that they could not be corrected without major rephrasing. Examples for some bad/good corrections can be found in @tbl-LLM-corrections-1 and @tbl-LLM-corrections-2, respectively.
 
 ```{r}
-#| label: tbl-LLM-corrections
+#| label: tbl-LLM-corrections-1
 #| message: false
 #| warning: false
-#| apa-note: Table of original and LLM-corrected statements and their respective labels.
+#| apa-note: Table of original and LLM-corrected statements that were classified as incorrect. In the examples '0' refers to correct and '1' to incorrect.
 #| ft-align: left
-#| tbl-cap: Examples of LLM Corrections
+#| tbl-cap: Examples of Incorrect LLM Corrections
 
 # Your selected example indices
-examples <- c(10, 60, 79, 80)
+examples <- c(60, 80)
 
 # Fix 'ÃŽÂ²' in statements --> should be beta
 llm_corrections$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$statement)
@@ -361,11 +497,53 @@ df_long %>%
   valign(j = ~Example, val = "center") %>%  # Align merged cells at the top
   line_spacing(j = c(1:3), space = 1.2) %>%  # Set line spacing in Statement column
   # fontsize(size = 9, part = "all") %>%
-width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
-width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
-width(j = 3, width = 4) %>%   # Column 3 (Statement)
-width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
-  # autofit()
+  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
+  width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
+  width(j = 3, width = 4) %>%   # Column 3 (Statement)
+  width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
+  # autofit() %>%
+```
+
+```{r}
+#| label: tbl-LLM-corrections-2
+#| message: false
+#| warning: false
+#| apa-note: Table of original and LLM-corrected statements that were classified as incorrect. In the examples '0' refers to correct and '1' to incorrect.
+#| ft-align: left
+#| tbl-cap: Examples of Correct LLM Corrections
+
+# Your selected example indices
+examples <- c(10, 79)
+
+# Fix 'ÃŽÂ²' in statements --> should be beta
+llm_corrections$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$statement)
+llm_corrections$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$corrected)
+
+# Create long format table
+df_long <- map_dfr(examples, function(i) {
+  example_label <- paste0("Example ", llm_corrections$label[i], " to ", llm_corrections$corrected_correct[i])
+  
+  tibble(
+    Example = rep(example_label, 2),
+    `Statement Type` = c("Original", "LLM-Corrected"),
+    Statement = c(llm_corrections$statement[i], llm_corrections$corrected[i]),
+    Label = as.character(c(llm_corrections$label[i], llm_corrections$corrected_correct[i]))
+  )
+})
+
+# Create the table with merged 'Example' cells
+df_long %>%
+  flextable() %>%
+  flextable::theme_apa() %>%
+  merge_v(j = ~Example) %>%       # Merge vertical cells in the 'Example' column
+  valign(j = ~Example, val = "center") %>%  # Align merged cells at the top
+  line_spacing(j = c(1:3), space = 1.2) %>%  # Set line spacing in Statement column
+  # fontsize(size = 9, part = "all") %>%
+  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
+  width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
+  width(j = 3, width = 4) %>%   # Column 3 (Statement)
+  width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
+  # autofit() %>%
 ```
 
 # 4 Discussion
