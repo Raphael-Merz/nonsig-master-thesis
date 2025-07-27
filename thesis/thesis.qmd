@@ -195,55 +195,6 @@ Lastly, I also also went through the 100 statements that were sent to an LLM to 
 
 In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model, a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters, and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data). Before the data was split into these three parts, I balanced the two labels (originally there were more correct than incorrect interpretations) to ensure that the model would not overfit to this class-imbalance.
 
-During BERT training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. The model would have been trained on a maximum of 10 epochs, but training ended early if the model did not improve, as measured by the validation loss, for two epochs. For final evaluation, I computed the fraction of correctly predicted classes among all predicted cases of a class (precision), the fraction of correctly predicted classes among all actual cases of a class (recall), and their harmonic mean (F1 score), separately for each class. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).
-
-## 2.4 Software
-
-All scripts for this thesis project were written in R [Version 4.5.0; @rcoreteam25] or Python [Version 3.12.10; @python].
-
-In R, I used *papercheck* [Version 0.0.0.9049; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9; @R-flextable], *magick* [Version 2.8.7; @R-magick], *papaja* [Version 0.1.3; @R-papaja] and *showtext* [Version 0.9-7; @R-showtext] to create APA-formatted tables.
-
-The Python libraries used to train the BERT models can be found in this requirements file: LINK. \[NOTE: They were just to many and apparently it's less common to cite these compared to R packages, which is why its sometimes very tricky to actually get info on how to cite them. I'll look into it later.\]
-
-All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: LINK.
-
-This thesis was not preregistered as no inferential statistical tests were performed.
-
-# 3 Results
-
-## 3.1 Detection Accuracy
-
-```{r detection_check data}
-#| include: false
-
-detection_check <- read_excel("../data/detection_check/detection_checked.xlsx")
-
-agreement_table <- table(detection_check$agreement)
-agreement_1 <- agreement_table[['1']]
-agreement_2 <- agreement_table[['2']]
-agreement_3 <- agreement_table[['3']]
-agreement_3_FP <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FP", na.rm = TRUE)
-agreement_3_FN <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FN", na.rm = TRUE)
-
-keywords_table <- table(detection_check$disagreement_keyword)
-keywords_figure <- keywords_table[['figure note']]
-keywords_footnote <- keywords_table[['footnote']]
-keywords_formatting <- keywords_table[['formatting']]
-keywords_character <- keywords_table[['not sure; unusual character']]
-keywords_pagebreak <- keywords_table[['page break']]
-keywords_tablecontent <- keywords_table[['table content']]
-keywords_ns <- keywords_table[['n.s.']]
-keywords_ps <- keywords_table[['p_s']]
-```
-
-Manually going through 25 articles from papercheck's sample library I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant *p* value in total. The automated RegEx search caught `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these completely, and `r agreement_3_FN` partially (incompletely) due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). It also 'found' `r agreement_3_FP` false positives in the sense that it extracted 'statements' from tables or figure notes or ones that were misclassified as coming from a results section. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the *p* value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant *p* value, and `r keywords_ps` were missed because the *p* value was written as '$p_s$'. Without these two mistakes the overall agreement of automated and manual approach would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
-
-Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that interfered with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).[^2]
-
-[^2]: I could not find one statement that was extracted automatically in the artilce's pdf. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.
-
-## 3.2 Classification Performance
-
 ```{r BERT performance}
 #| include: false
 #################################
@@ -361,9 +312,62 @@ n_epochs_PubMedBERT <- max(training_history_PubMedBERT$epoch)
 best_epoch_PubMedBERT <- training_history_PubMedBERT$epoch[training_history_PubMedBERT$eval_loss == min(training_history_PubMedBERT$eval_loss)]
 ```
 
+During BERT training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. The model would have been trained on a maximum of 16 epochs, but training ended early if the model did not improve, as measured by the validation loss, for two epochs. In fact, the longest training was `r max(c(n_epochs_BERT, n_epochs_SciBERT, n_epochs_PubMedBERT))`. For final evaluation, I computed the fraction of correctly predicted classes among all predicted cases of a class (precision), the fraction of correctly predicted classes among all actual cases of a class (recall), and their harmonic mean (F1 score), separately for each class. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).
+
+## 2.3 Annotation and labeling of the data
+
+Since getting the labeled data for training the BERT models is such a crucial step, I wanted to put it into its own section to address some of my thoughts and uncertainties. XXX
+
+## 2.4 Software
+
+All scripts for this thesis project were written in R [Version 4.5.0; @rcoreteam25] or Python [Version 3.12.10; @python].
+
+In R, I used *papercheck* [Version 0.0.0.9049; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9; @R-flextable], *magick* [Version 2.8.7; @R-magick], *papaja* [Version 0.1.3; @R-papaja] and *showtext* [Version 0.9-7; @R-showtext] to create APA-formatted tables.
+
+The Python libraries used to train the BERT models can be found in this requirements file: LINK. \[NOTE: They were just to many and apparently it's less common to cite these compared to R packages, which is why its sometimes very tricky to actually get info on how to cite them. I'll look into it later.\]
+
+All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: LINK.
+
+This thesis was not preregistered as no inferential statistical tests were performed.
+
+# 3 Results
+
+## 3.1 Detection Accuracy
+
+```{r detection_check data}
+#| include: false
+
+detection_check <- read_excel("../data/detection_check/detection_checked.xlsx")
+
+agreement_table <- table(detection_check$agreement)
+agreement_1 <- agreement_table[['1']]
+agreement_2 <- agreement_table[['2']]
+agreement_3 <- agreement_table[['3']]
+agreement_3_FP <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FP", na.rm = TRUE)
+agreement_3_FN <- sum(detection_check$agreement == 3 & detection_check$agree_3_FP_FN == "FN", na.rm = TRUE)
+
+keywords_table <- table(detection_check$disagreement_keyword)
+keywords_figure <- keywords_table[['figure note']]
+keywords_footnote <- keywords_table[['footnote']]
+keywords_formatting <- keywords_table[['formatting']]
+keywords_character <- keywords_table[['not sure; unusual character']]
+keywords_pagebreak <- keywords_table[['page break']]
+keywords_tablecontent <- keywords_table[['table content']]
+keywords_ns <- keywords_table[['n.s.']]
+keywords_ps <- keywords_table[['p_s']]
+```
+
+Manually going through 25 articles from papercheck's sample library I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant *p* value in total. The automated RegEx search caught `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these completely, and `r agreement_3_FN` partially (incompletely) due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). It also 'found' `r agreement_3_FP` false positives in the sense that it extracted 'statements' from tables or figure notes or ones that were misclassified as coming from a results section. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the *p* value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant *p* value, and `r keywords_ps` were missed because the *p* value was written as '$p_s$'. Without these two mistakes the overall agreement of automated and manual approach would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
+
+Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that interfered with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).[^2]
+
+[^2]: I could not find one statement that was extracted automatically in the artilce's pdf. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.
+
+## 3.2 Classification Performance
+
 @fig-2 shows the training and validation loss curves for the three BERT models across their training. Standard BERT was trained for a total of `r n_epochs_BERT` epochs before early stopping was triggered due to a lack of improvement in validation loss for two consecutive epochs. The model from epoch `r best_epoch_BERT` was therefore selected as the best-performing version. Similarly, SciBERT and PubMedBERT achieved their best validation performance after epoch `r best_epoch_SciBERT` and `r best_epoch_PubMedBERT`, respectively.
 
-As shown in @fig-2, the training loss consistently decreased over time for all three models, which is expected given that the models were optimized to fit the training data. The validation loss, however, followed a slightly different trajectory. Visually, standard BERT exhibits a somewhat distinct pattern compared to SciBERT and PubMedBERT, likely reflecting its different pretraining on general English rather than scientific texts. This difference in pretraining may also explain the similar behavior of SciBERT and PubMedBERT in both their performance and the shape of their loss curves over the course of training.
+As shown in @fig-2, the training loss consistently decreased over time for all three models, as expected given that they were optimized to fit the training data. In contrast, the validation loss plateaued in all models at a certain point, indicating that further improvements in fitting the training data no longer translated into better performance on unseen data and may even signal the onset of overfitting. Notably, this plateau occurred later in the training of the standard BERT model, which may reflect its different pretraining on general English text compared to the domain-specific pretraining of SciBERT and PubMedBERT.
 
 ```{r Combine model loss curves into one figure}
 #| include: false
@@ -383,9 +387,7 @@ image_write(combined, path = "../data/model_performance/loss_curve/loss_combined
 
 ![Training and Validation Loss Curve](../data/model_performance/loss_curve/loss_combined.png){#fig-2 width="6in" fig-alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch `r best_epoch_BERT`, `r best_epoch_SciBERT`, and `r best_epoch_PubMedBERT`, respectively, based on the minumum validation loss." apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch `r best_epoch_BERT`, `r best_epoch_SciBERT`, and `r best_epoch_PubMedBERT`, respectively, based on the minumum validation loss."}
 
-The different performance metrics are summarized in @tbl-model-performance. As reflected in the macro F1 score, both SciBERT and PubMedBERT achieved strong overall performance in classifying correct and incorrect statements with a macro F1 score of `r macro_F1_SciBERT` and `r macro_F1_PubMedBERT`, respectively. Standard BERT lagged slightly behind, with a macro F1 score of `r macro_F1_BERT`.
-
-Since the performance of SciBERT and PubMedBERT was so similar, a closer look at the confusion matrices in @fig-3 reveals subtle differences: PubMedBERT was slightly better at correctly classifying correct statements (with one more true negative), while SciBERT performed slightly better at identifying incorrect statements (with two fewer false positives). Taken together, SciBERT demonstrated the best overall performance. X NEEDS TO BE UPDATES X
+The different performance metrics are summarized in @tbl-model-performance. As reflected in the macro F1 score, both SciBERT achieved the best overall performance in classifying correct and incorrect statements with a macro F1 score of `r macro_F1_SciBERT`. Standard BERT and PubMedBERT lagged slightly behind, with macro F1 scores of `r macro_F1_BERT` and `r macro_F1_PubMedBERT`, respectively. All three models appear to be better at predicting correct statements then incorrect ones, reflected by the F1 score of the 'correct' class, with SciBERT scoring best ('correct' F1 score of `r F1_0_SciBERT`). Similarly, in all models, recall was higher than precision in the 'correct' class, whereas the opposite pattern was visible in the 'incorrect' class, suggesting that the models tend to err on the side of overidentifying statements as correct rather than incorrect. In fact, the standard BERT model was just slightly better at reducing false negatives (at the cost of more false positives) in this test set (Precision in the 'incorrect' class: `r precision_1_BERT` vs. SciBERT's `r precision_1_SciBERT`). @fig-3 reveals more of these sometimes subtle differences between the three models.
 
 ```{r}
 #| label: tbl-model-performance
@@ -450,15 +452,15 @@ Since SciBERT was the best, overall model, @tbl-false-classification shows some 
 #| label: tbl-false-classification
 #| message: false
 #| warning: false
-#| apa-note: Table of precision, recall and F1 score per model and class.
+#| apa-note: Examples for incorrect classifications of the trained SciBERT model on the test data.
 #| ft-align: left
-#| tbl-cap: Model Performance
+#| tbl-cap: Incorrect SciBERT Classifications
 
 # Create the data
 tibble(
-  'Model Prediction'  = c("False Negative", "False Negative" ,"False Positive", "False Positive"),
-  'Statement'         = c(test_predictions_SciBERT$statement[74], test_predictions_SciBERT$statement[141],
-                          test_predictions_SciBERT$statement[62], test_predictions_SciBERT$statement[91])) %>%
+  'Model Prediction'  = c("False Negative", "False Negative" ,"False Negative", "False Positive"),
+  'Statement'         = c(test_predictions_SciBERT$statement[6], test_predictions_SciBERT$statement[16],
+                          test_predictions_SciBERT$statement[83], test_predictions_SciBERT$statement[4])) %>%
   flextable() %>%
   width(j = 1, width = 1) %>%   # Set width of column 1 (Error)
   width(j = 2, width = 5) %>%   # Set width of column 1 (Statement)
@@ -570,17 +572,42 @@ df_long %>%
 
 # 4 Discussion
 
-## 4.1 Summary of Findings
+## 4.1 Summary of Key Results
 
-## 4.2 Strengths of the Approach
+In this study, I developed and evaluated a three-step pipeline for automatically correcting misinterpretations of nonsignificant results as evidence for the absence of an effect. The approach combines rule-based RegEx searches for detecting relevant statements, fine-tuned BERT models for classification, and LLMs for generating corrected versions. While each step leaves room for further improvement, the overall framework performed well and shows promise for broader applications beyond p value misinterpretations.
 
-## 4.3 Limitations and Challenges
+PART TO SOMEHOW WORK INTO THIS: "This framework works so well because of the combination of the three different methods that work well in solving one of the specific goals needed to reach a coherent and useful tool. The rule-based RegEx searches immensely reduce the content that needs to be analyzed with NLP and offer diverse options to search text systematically and quickly. The BERT models used here are just complex enough to 'understand' text and and how different words and synonyms of them are related, but can be more easily and flexibly trained for a specific task than new, more complex models like GPTs. Lastly, the idea of using LLMs here is an optional last step to getting suggestions for alternative phrasing, but the approach works just as well without them. Still, as this study showed, when given a very specific task, the used Llama model in this study created useful suggestions that can show users the right path to not misinterpret their results."
 
-## 4.4 Implication of the Tool
+Results from the statement detection phase showed that RegEx searches are a very useful way of finding candidate statements for this type of misinterpretation. However, the missed statements (limitation that there are always examples that are not checked with RegEx atm, e.g., in this study it didnt find nonsig p values that were written as just 'n.s.' or when the p was written as p_s (s as a subscript)) that the RegEx search terms need to be expanded upon. At the same time, it was also shown that there are certain formatting issues that prohibit 100% extraction rate, because pdf formatting is weird.
 
-## 4.5 Future Directions and Improvements
+It is truly remarkable that with the relatively few hand-labeled statements used in this study (<1000 in total, split into training, validation and test set) the performance is as good as it is. This perhaps speaks to the homogeneity in which we interpret nonsignificant findings (either we say "something was not significant" or "there was no effect" or slight but not to drastically different versions of it). Since the sample size of this training data was more determined by what was practically available and doable (I only used the already available sample library in the papercheck package), there is much potential to expand on this with using more and more diverse data sources (than just using Psychological Science Articles). Still, this is for sure a strong baseline.
+
+The last step, the correction of incorrect statements, was by far the one less developed. This has a reason though. The idea of using LLMs here is an optional last step to getting suggestions for alternative phrasing, but the approach works just as well without them. Still, as this study showed, when given a very specific task, the used Llama model in this study created useful suggestions that can show users the right path to not misinterpret their results.
+
+## 4.2 Limitations and Challenges
+
+While I am very happy with the high performance of the pipeline, its current usefulness should not be overstated. First of all, I only evaluated the three steps of correcting misinterpretations independently in this study. This means, that while the reliability at each step was low (and this is great!), the final and fully-automated performance will be lower (given that errors may be introduced at each step.). Researchers must take this into account when using this or similar tools.
+
+Secondly, I need to address the inherent subjectivity in my manual annotation of the training data. What the classifiers seem to be really good at is classifying statements similar to how I would classify them. Maybe you read some of the example statements in the tables of this very article and thought that you would have coded them differently. This is a limitation I tried to overcome by having regular discussion with a statistics expert (my supervisor) on any hard to code or borderline statements. Still, having two raters at each of the different steps where something was compared to 'human ground truth' would have been ideal.
+
+Relatedly, there is only so much you can automate when it comes these sometimes complex interpretations of statistics. During my annotations, I often doubted labels or what i was coding in the first place (e.g., is it any statements that are wrong, or any statements that could be improved, or just 'no effect' specifically, etc. how to code "no evidence", "no quantitative/reliable difference", "not different from chance", and more very unique ways of saying something; feel free to check out the 'label_comments' column of the labeled dataset on GitHub to see some of this uncertainty play in action (statement specific)). Still, the fact that the BERT model did generalize to the test set data proves to be that whatever I coded, it was systematic enough to be learned by a machine. And I'm at least 95% sure it had something to do with misinterpretations of nonsignificance as the absence of an effect!
+
+Then there is the problem of juggling false positives and false negatives. The trained BERT models, as they stand now, try to balance these to archieve the best overall performance. But in practice, whether I'm more interested in one of them, or a balance, depends on the task at hand. For example, in the application as a module in papercheck, there will be users who want to find mistakes in their work and therefore might want as few false negatives as possible, while accepting a number of false negatives (as long as these arent too many). On the other hand, a meta-scientist using the module to try and estimate the prevalence of this misinterpretation over time and journaly would want as few false positives (and might be open to more false negatives) to ensure a reliable (but maybe under-estimated) estimate. This issue will need to be addressed, but there are ways of fixing it (e.g., specifying a threshold for the model to make its predictions on).
+
+The models also dont have much context for the classifications (namely jsut one sentence with a nonsig p value in it). They therefore don't know if the authors follow best practices and use something like equivalence testing, or if they also included Bayesian analyses somewhere else in the document. Or they have a specific section where they say something like "whenever we say 'no effect', what we really mean is it wasnt significant and we cannot rule out that an effect is exactly zero, but we wanted to follow the journals word limit so could always say 'significantly' lol sorry"...
+
+Similarly, the statement detection process also isnt perfect. It misses some (sometimes weird or even incorrect but still) ways of reporting p values. It also doesnt take into account confidence intervals which could also show that an effect was significant. It also cant extract statements if there is no p vlaues bc it was onyl reported in a table and authors dont put them in the sentence talking about the nonsig finding.
+
+## 4.3 Implementation and Future Directions
+
+This framework of a RegEx detection, classifier-based classification and conditional and option correction will be implemented into the papercheck infrastructure and will form a new module to detect these misinterpretations. Of course, the issues discussed just now (in the limitations section) will be fixed if possible or communicated transparently. Embedding the general three folded approach into papercheck will also allow other users to build similar tools (especially classifiers) for other things of interest to them. The three fold nature of the approach makes it very easy to be applied to new problems. Of course, getting the necessary training data is also a main problem 
+
+- LLM could get more context to be able to make better more fitting predictions
+- 
 
 # 5 Conclusion
+
+This paper highlights how a combination of rule- and NPL-based approaches, allows users to fix problems like misinterpretations of nonsignificance in an efficient, reliable and straightforward way. This study showed how each of the three steps of statement detection, classification and correction on its own performane well. The next step is therefore to use this pipeline in full and see the real-life performance across the three substeps.
 
 # Achknowledgement
 I want to thank Dr. Daniël Lakens for his constant support in conducting this thesis, for a lovely research stay to work on it. I thank my partner for her constant support, for pushing me when I felt down and for very helpful discussions on whether and how we should and should not use AI. I thank Prof. Dr. Maike Luhmann for letting me work on a meta-scientific project like this that is so close to my heart, even though it was a little out of her expertise. I thank Christian Sodano for very helpful discussions on machine learning and BERT models that prevented model training from being 'algorithmic *p*-hacking'.
