@@ -101,13 +101,13 @@ In summary, there are many reasons why *p* values remain difficult to interpret 
 
 Before describing the data used in this study, it is important to understand the three steps of the proposed framework. Statements from scientific articles needed to be reliably detected, classified, and finally corrected. For each step, I applied specific methods that were best suited to achieve the respective goal.
 
-To detect statements I searched used rule-based regular expressions (RegEx) and searched articles's results sections for them. Effectively, RegEx searchers are just more complex Ctrl+F searches, where a user can also include optional charcters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck [@R-papercheck] has a module that detects almost all p values (see Section XXX) based on RegEx searches and I filtered these to just the ones equal to or above .05. I then expanded the extracted nonsignificant p values to the full sentence with papercheck and added +/- one sentence as context in case of extraction errors etc. (more on this in Section XXX).[^1]
+To detect statements I searched used rule-based regular expressions (RegEx) and searched articles's results sections for them. Effectively, RegEx searchers are more complex Ctrl+F searches, where a user can also include rules like optional characters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck [@R-papercheck] has a module that detects almost all *p* values (see Section 3.1 for examples of what it does not currently detect) based on RegEx searches and I filtered these to just the ones equal to or above .05. I then expanded the extracted nonsignificant *p* values to the full sentence with papercheck and added +/- one sentence as context in case of extraction errors (incomplete statements).[^1]
 
 [^1]: In a final tool, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.
 
-In the next step, these statements (labeled as correct or incorrect by me; see Section XXX) were used to train several BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in my classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes even further, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing.
+In the next step, these statements (labeled as correct or incorrect by me; see Section 2.2) were used to train three BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in this study's classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT goes even further, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were trained and evaluated on their ability to distinguish between correct and incorrect (as the absence of an effect) interpretations of nonsignificant results in scientific writing.
 
-Lastly, statements that have been labeled as being incorrect by a BERT classifier were sent to a LLM to get corrected. The full prompt is available in X was had X word plus the respective statement. In short, the model was instructed to only change any misinterpretations of nonsignificant p values as the absence of an effect and keep the rest of the statement. Do communicate with the LLM, I used papercheck [@R-papercheck], which, in turn, uses the Groq API (available at <https://groq.com/>) to communicate with different LLMs. I used papercheck's standard LLM, 'llama-3.3-70b-versatile' (as of 07/24/2025).
+Lastly, statements that were classified by the best performing BERT model, would, in the application of this framework, be sent to an LLM to be corrected. However, for the purposes of this validation study, I sent statements which I coded as correct on incorrect to the LLM (more on this in Section 2.2). The full prompt is available in X was had X word. In short, the model was instructed to only change any misinterpretations of nonsignificant *p* values as the absence of an effect and keep the rest of the statement unchanged. To communicate with the LLM, I used papercheck [@R-papercheck], which, in turn, uses the Groq API (available at <https://groq.com/>) to communicate with different LLMs. I used papercheck's standard LLM, 'llama-3.3-70b-versatile' (as of 07/24/2025).
 
 ## 2.2 Validation Process and Performance Metrics
 
@@ -168,11 +168,9 @@ q1_article_year <- round(quartiles[[1]], 0)
 q3_article_year <- round(quartiles[[2]], 0)
 ```
 
-MAYBE (RE)MOVE The articles that were used in this study were part of papercheck's sample library of 250 open access article from the journal Psychological Science, published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = \[`r q1_article_year`; `r q3_article_year`\]). MAYBE (RE)MOVE
-
 To assess how well each of these three automated approaches worked, I compared each one to human ground truth and calculated appropriate measures of reliability between automated and human results.
 
-Firstly, to ensure that the statement detection process actually caught all statements with nonsignificant p values, I manually extracted all of these from 25 (10%) of the papercheck sample library's 250 open access article from the journal Psychological Science. Articles were published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = \[`r q1_article_year`; `r q3_article_year`\]). I then coded whether a statements I found were also extracted with the automated RegEx search.
+Firstly, to ensure that the statement detection process actually caught all statements with nonsignificant *p* values in articles' results sections, I manually extracted these from 25 (10%) of the papercheck sample library's 250 open access article from the journal Psychological Science. These articles were published between `r min_article_year` and `r max_article_year` (Median = `r median_article_year`; IQA = \[`r q1_article_year`; `r q3_article_year`\]). I then coded whether a statements I found were also extracted with the automated RegEx search.
 
 ```{r labeled data descriptives}
 #| include: false
@@ -191,21 +189,21 @@ keywords_99_marginally <- keywords_99[['marginally significant']]+keywords_99[['
 keywords_99_modelfit <- keywords_99[['incomplete']]+keywords_99[['model fit; incomplete']]
 ```
 
-For the training of the BERT models and to assess their final performance I labeled all automatically extracted statements that were detected to be from an article's Results section. This resulted in `r nrow(labeled_results)` statements in total. Of these, `r nrow(labeled_results_0)` were classified as correct and `r nrow(labeled_results_1)` were classified as incorrect. The remaining `r nrow(labeled_results_99)` statements were classified as not neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (`r keywords_99_marginally`), because the statements were not complete enough to check their correctness (`r keywords_99_incomplete`), because they interpreted model fit indices and not the p value (`r keywords_99_modelfit`), because they were 'false flags' of nonsignificant p values (`r keywords_99_flaseflag`), or due to a combination of these or other reasons (`r nrow(labeled_results_99)-keywords_99_flaseflag-keywords_99_incomplete-keywords_99_marginally-keywords_99_modelfit`).
+For the training of the BERT models and to assess their final performance, I labeled all automatically extracted statements that were detected to be from an article's results section from papercheck's sample library. This resulted in `r nrow(labeled_results)` statements in total. Of these, `r nrow(labeled_results_0)` were classified as correct and `r nrow(labeled_results_1)` were classified as incorrect. The remaining `r nrow(labeled_results_99)` statements were classified as neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (`r keywords_99_marginally`), because the statements were not complete enough to check their correctness (`r keywords_99_incomplete`), because they interpreted model fit indices and not the *p* value (`r keywords_99_modelfit`), because they were 'false flags' of nonsignificant *p* values (`r keywords_99_flaseflag`), nor really containing nonsignificant *p* values, or due to a combination of these or other reasons (`r nrow(labeled_results_99)-keywords_99_flaseflag-keywords_99_incomplete-keywords_99_marginally-keywords_99_modelfit`).
 
-Lastly, I also also went through the 100 statements that were sent to an LLM to be corrected, to see if the 'corrected' statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with possible false positives from the automated classification.
+Lastly, I also also went through the 100 statements that were sent to an LLM to be corrected, to see if the 'corrected' statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with false positives from the automated classification.
 
-In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model; a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters; and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data).
+In addition to these validity checks, there are also performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model, a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters, and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data). Before the data was split into these three parts, I balanced the two labels (originally there were more correct than incorrect interpretations) to ensure that the model would not overfit to this class-imbalance.
 
-During BERT training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. The model would have been trained on a maximum of 10 epochs, but training ended early if the model did not improve, as measured by the validation loss, for two epochs. For final evaluation, I computed the fraction of correctly predicted positive cases among all predicted positives (precision), the fraction of correctly predicted positive cases among all actual positives (recall), and their harmonic mean (F1 score), separately for each class label. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).
+During BERT training, I computed the training loss (sum of errors between model predictions and actual labels in the training set) and the validation loss (same for validation set). The best-performing model was selected based on the lowest validation loss. The model would have been trained on a maximum of 10 epochs, but training ended early if the model did not improve, as measured by the validation loss, for two epochs. For final evaluation, I computed the fraction of correctly predicted classes among all predicted cases of a class (precision), the fraction of correctly predicted classes among all actual cases of a class (recall), and their harmonic mean (F1 score), separately for each class. To summarize overall performance across the two classes, I calculated the unweighted average of the two F1 scores (macro-F1 score).
 
 ## 2.4 Software
 
-All scripts for this thesis project were written in R [Version 4.5.0\; @rcoreteam25] or Python [Version 3.12.10\; @python].
+All scripts for this thesis project were written in R [Version 4.5.0; @rcoreteam25] or Python [Version 3.12.10; @python].
 
-In R, I used *papercheck* [Version 0.0.0.9049\; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5\; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6\; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0\; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9\; @R-flextable], *magick* [Version 2.8.7\; @R-magick], *papaja* [Version 0.1.3\; @R-papaja] and *showtext* [Version 0.9-7\; @R-showtext] to create APA-formatted tables.
+In R, I used *papercheck* [Version 0.0.0.9049; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9; @R-flextable], *magick* [Version 2.8.7; @R-magick], *papaja* [Version 0.1.3; @R-papaja] and *showtext* [Version 0.9-7; @R-showtext] to create APA-formatted tables.
 
-The Python libraries used to train the BERT models can be found in this requirements file: LINK.
+The Python libraries used to train the BERT models can be found in this requirements file: LINK. \[NOTE: They were just to many and apparently it's less common to cite these compared to R packages, which is why its sometimes very tricky to actually get info on how to cite them. I'll look into it later.\]
 
 All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (mostly R) and recreate this manuscript (Quarto Markdown in R Studio; I did change few formatting, not content, related things manually in the exported Word document) are available in this GitHub repository, together with instructions on how to set it up: LINK.
 
@@ -238,11 +236,11 @@ keywords_ns <- keywords_table[['n.s.']]
 keywords_ps <- keywords_table[['p_s']]
 ```
 
-Manually going through 25 articles from papercheck's sample library I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant p value in total. The automated RegEx searches caught `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these completely, and `r agreement_3_FN` partially (incompletely) due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). It also 'found' `r agreement_3_FP` false positives in the sense that it extracted 'statements' from tables or figure notes or ones that were false classified as coming from a results section. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the p value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant p value, and `r keywords_ps` were missed because the p value was written as '$p_s$'. Without these two mistakes the overall agreement of automated and manual approach would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
+Manually going through 25 articles from papercheck's sample library I detected `r agreement_1+agreement_2+agreement_3_FN` statements with a nonsignificant *p* value in total. The automated RegEx search caught `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these completely, and `r agreement_3_FN` partially (incompletely) due to extraction errors (e.g., because of pdf formatting like page breaks, figures or footnotes). It also 'found' `r agreement_3_FP` false positives in the sense that it extracted 'statements' from tables or figure notes or ones that were misclassified as coming from a results section. Note, however, that the large majority of the total `r agreement_2+agreement_3_FN` missed statements were due to specific ways of writing (or not writing) the *p* value: `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant *p* value, and `r keywords_ps` were missed because the *p* value was written as '$p_s$'. Without these two mistakes the overall agreement of automated and manual approach would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
 
-Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that messed with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).[^2]
+Most of the other misses were due to pdf formatting issues like figures, tables, footnotes and page breaks or unusual characters inside the statement that interfered with the statement extraction (`r keywords_figure+keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak+keywords_tablecontent` in total).[^2]
 
-[^2]: I could not find one statement that was extracted automatically. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.
+[^2]: I could not find one statement that was extracted automatically in the artilce's pdf. My current theory is that this was an artifact from when the pdf was compiled and might be from a different article even, once again highlighting how impractical the pdf format is in times of increasing automation.
 
 ## 3.2 Classification Performance
 
@@ -363,7 +361,9 @@ n_epochs_PubMedBERT <- max(training_history_PubMedBERT$epoch)
 best_epoch_PubMedBERT <- training_history_PubMedBERT$epoch[training_history_PubMedBERT$eval_loss == min(training_history_PubMedBERT$eval_loss)]
 ```
 
-@fig-2 shows the training and validation loss of the three BERT models over their training. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+@fig-2 shows the training and validation loss curves for the three BERT models across their training. Standard BERT was trained for a total of `r n_epochs_BERT` epochs before early stopping was triggered due to a lack of improvement in validation loss for two consecutive epochs. The model from epoch `r best_epoch_BERT` was therefore selected as the best-performing version. Similarly, SciBERT and PubMedBERT achieved their best validation performance after epoch `r best_epoch_SciBERT` and `r best_epoch_PubMedBERT`, respectively.
+
+As shown in @fig-2, the training loss consistently decreased over time for all three models, which is expected given that the models were optimized to fit the training data. The validation loss, however, followed a slightly different trajectory. Visually, standard BERT exhibits a somewhat distinct pattern compared to SciBERT and PubMedBERT, likely reflecting its different pretraining on general English rather than scientific texts. This difference in pretraining may also explain the similar behavior of SciBERT and PubMedBERT in both their performance and the shape of their loss curves over the course of training.
 
 ```{r Combine model loss curves into one figure}
 #| include: false
@@ -378,12 +378,14 @@ loss_curve_pubmed   <- image_read_pdf("../data/model_performance/loss_curve/PubM
 combined <- image_append(c(loss_curve_bert, loss_curve_scibert, loss_curve_pubmed))
 
 # Save to a new PDF
-image_write(combined, path = "../data/model_performance/loss_curve/loss_combined.pdf", format = "pdf")
+image_write(combined, path = "../data/model_performance/loss_curve/loss_combined.png", format = "png")
 ```
 
-![Training and Validation Loss Curve](../data/model_performance/loss_curve/loss_combined.pdf){#fig-2 width="6in" fig-alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after 4, 5, and 5 respectively, based on the minumum validation loss." apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch 4, 5, and 5 respectively, based on the minumum validation loss."}
+![Training and Validation Loss Curve](../data/model_performance/loss_curve/loss_combined.png){#fig-2 width="6in" fig-alt="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after 4, 5, and 5 respectively, based on the minumum validation loss." apa-note="Curves of the training and validation loss of the three trained BERT models. The best models for regular BERT, SciBERT and PubMedBERT were chosen after epoch 4, 5, and 5 respectively, based on the minumum validation loss."}
 
-The different performance metrics can be found in @tbl-model-performance. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+The different performance metrics are summarized in @tbl-model-performance. As reflected in the macro F1 score, both SciBERT and PubMedBERT achieved strong overall performance in classifying correct and incorrect statements with a macro F1 score of `r macro_F1_SciBERT` and `r macro_F1_PubMedBERT`, respectively. Standard BERT lagged slightly behind, with a macro F1 score of `r macro_F1_BERT`.
+
+Since the performance of SciBERT and PubMedBERT was so similar, a closer look at the confusion matrices in @fig-3 reveals subtle differences: PubMedBERT was slightly better at correctly classifying correct statements (with one more true negative), while SciBERT performed slightly better at identifying incorrect statements (with two fewer false positives). Taken together, SciBERT demonstrated the best overall performance. X NEEDS TO BE UPDATES X
 
 ```{r}
 #| label: tbl-model-performance
@@ -437,12 +439,32 @@ confusion_matrix_pubmed   <- image_read_pdf("../data/model_performance/confusion
 combined <- image_append(c(confusion_matrix_bert, confusion_matrix_scibert, confusion_matrix_pubmed))
 
 # Save to a new PDF
-image_write(combined, path = "../data/model_performance/confusion_matrix/confusion_matrix_combined.pdf", format = "pdf")
+image_write(combined, path = "../data/model_performance/confusion_matrix/confusion_matrix_combined.png", format = "png")
 ```
 
-![Confusion Matrix](../data/model_performance/confusion_matrix/confusion_matrix_combined.pdf){#fig-3 width="6.5in" fig-alt="Confusion matrices of the three trained BERT models." apa-note="Confusion matrices of the three trained BERT models."}
+![Confusion Matrix](../data/model_performance/confusion_matrix/confusion_matrix_combined.png){#fig-3 width="6.5in" fig-alt="Confusion matrices of the three trained BERT models." apa-note="Confusion matrices of the three trained BERT models."}
 
-Examples of incorrectly classified statements: Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+Since SciBERT was the best, overall model, @tbl-false-classification shows some of its incorrect predictions.
+
+```{r}
+#| label: tbl-false-classification
+#| message: false
+#| warning: false
+#| apa-note: Table of precision, recall and F1 score per model and class.
+#| ft-align: left
+#| tbl-cap: Model Performance
+
+# Create the data
+tibble(
+  'Model Prediction'  = c("False Negative", "False Negative" ,"False Positive", "False Positive"),
+  'Statement'         = c(test_predictions_SciBERT$statement[74], test_predictions_SciBERT$statement[141],
+                          test_predictions_SciBERT$statement[62], test_predictions_SciBERT$statement[91])) %>%
+  flextable() %>%
+  width(j = 1, width = 1) %>%   # Set width of column 1 (Error)
+  width(j = 2, width = 5) %>%   # Set width of column 1 (Statement)
+  #fontsize(size = 11, part = "all") %>%
+  flextable::theme_apa()
+```
 
 ## 3.3 Correction Evaluation
 
@@ -560,6 +582,10 @@ df_long %>%
 
 # 5 Conclusion
 
+# Achknowledgement
+I want to thank Dr. Daniël Lakens for his constant support in conducting this thesis, for a lovely research stay to work on it. I thank my partner for her constant support, for pushing me when I felt down and for very helpful discussions on whether and how we should and should not use AI. I thank Prof. Dr. Maike Luhmann for letting me work on a meta-scientific project like this that is so close to my heart, even though it was a little out of her expertise. I thank Christian Sodano for very helpful discussions on machine learning and BERT models that prevented model training from being 'algorithmic *p*-hacking'.
+ 
+
 # References
 
 <!-- References will auto-populate in the refs div below -->
@@ -567,6 +593,3 @@ df_long %>%
 ::: {#refs}
 :::
 
-# Appendix
-
-XXX
