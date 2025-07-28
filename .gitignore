@@ -35,3 +35,6 @@ data/detection_check/article_pdfs
 
 # Logs and misc
 *.log
+
+# Ignore thesis_files (artifact from html version of thesis)
+thesis/thesis_files/
