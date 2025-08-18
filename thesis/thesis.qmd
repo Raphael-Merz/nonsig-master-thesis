@@ -70,7 +70,7 @@ In the context of research, similar automated solutions are already gaining trac
 
 To make the process of checking manuscripts more systematic, @R-papercheck developed Papercheck, an R package, which allows users to run a battery of checks on scientific papers. These include statistical checks (e.g., identifying imprecisely reported *p* values) as well as general manuscript quality checks (e.g., verifying links to online repositories or consistency between in-text citations and reference lists). Papercheck can be used both for single articles (e.g., as writing assistance) and for batches of articles (e.g., for meta-scientific studies). Because this framework is actively maintained and continues to evolve, the approach presented in this study was designed to fit within the Papercheck infrastructure.
 
-CITE AND EXPLAIN @bucher_martini24a!!!
+CITE AND EXPLAIN @bucher_martini24!!!
 
 # 2 Methods
 
