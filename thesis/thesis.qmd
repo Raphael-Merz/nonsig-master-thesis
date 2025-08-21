@@ -1,6 +1,6 @@
 ---
 title: "From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant *p* Values"
-shorttitle: "Hybrid NLP for Correcting *p* Value Misinterpretations"
+shorttitle: "Hybrid NLP for Correcting p Value Misinterpretations"
 author:
   - name: Raphael Merz
     corresponding: true
@@ -70,21 +70,19 @@ In the context of research, similar automated solutions are already gaining trac
 
 To make the process of checking manuscripts more systematic, @R-papercheck developed Papercheck, an R package, which allows users to run a battery of checks on scientific papers. These include statistical checks (e.g., identifying imprecisely reported *p* values) as well as general manuscript quality checks (e.g., verifying links to online repositories or consistency between in-text citations and reference lists). Papercheck can be used both for single articles (e.g., as writing assistance) and for batches of articles (e.g., for meta-scientific studies). Because this framework is actively maintained and continues to evolve, the approach presented in this study was designed to fit within the Papercheck infrastructure.
 
-CITE AND EXPLAIN @bucher_martini24!!!
-
 # 2 Methods
 
 ## 2.1 Statement Detection, Classification and Correction
 
 Before describing the data used in this study, it is important to understand the three steps of the proposed framework. Statements from scientific articles needed to be reliably detected, classified, and finally corrected. For each step, I applied specific methods that were best suited to achieve the respective goal.
 
-To detect statements I used rule-based regular expressions (RegEx) and searched articles' results sections to detect these expressions. Effectively, RegEx searchers are advanced Ctrl+F searches, where a user can include rules like optional characters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck [@R-papercheck] has a module that detects almost all *p* values (see Section 3.1 for examples of what it does not currently detect) based on RegEx searches. Using this module, I created a subset of all *p* values equal to or above .05. I then expanded the extracted nonsignificant *p* values to the full sentence with Papercheck and added +/- one sentence as context in case of extraction errors (incomplete statements).[^1]
+To detect statements I used rule-based regular expressions (RegEx) and searched articles' results sections to detect these expressions. Effectively, RegEx searchers are advanced Ctrl+F searches, where a user can include rules like optional characters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck has a module that detects almost all *p* values (see Section 3.1 for examples of what it does not currently detect) based on RegEx searches. Using this module, I created a subset of all *p* values equal to or above .05. I then expanded the extracted nonsignificant *p* values to the full sentence and added +/- one sentence as context in case of extraction errors (incomplete statements).[^1]
 
 [^1]: In a final tool, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.
 
-In the next step, these statements (labeled as correct or incorrect by me; see Section 2.2) were used to train three BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in this study's classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT is an even more specific pretrained language model, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were trained and evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing.
+In the next step, these statements (labeled as correct or incorrect by me; see Section 2.2) were used to train three BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in this study's classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT is an even more specific pretrained language model, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were trained and evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing. The models’ hyperparameters (e.g., learning rate, batch size) were informed by established defaults in the field (see https://huggingface.co/docs/transformers/en/main_classes/trainer) and relevant tutorials [@more25; @talebi24], with further refinements to improve models' prediction performance.
 
-Lastly, statements that were classified by the best performing BERT model, would, in the application of this framework, be sent to an LLM to be corrected. However, for the purposes of this validation study, I sent statements which I coded as correct or incorrect to the LLM (more on this in Section 2.2). The full prompt is available in X and had X word. In short, the model was first explained that it would get a statement with at least one misinterpretations of a nonsignificant finding as the absence of an effect and then instructed to change only parts of the statements that relate to this misinterpretations, but keep the rest of the statement unchanged. To communicate with the LLM, I used Papercheck [@R-papercheck], which, in turn, uses the Groq API (available at <https://groq.com/>) to communicate with different LLMs. I used Papercheck's default model (as of 07/24/2025): 'llama-3.3-70b-versatile'.
+Lastly, statements that were classified by the best performing BERT model, would, in the application of this framework, be sent to an LLM to be corrected. However, for the purposes of this validation study, I sent statements which I coded as correct or incorrect to the LLM (more on this in Section 2.2).
 
 ## 2.2 Validation Process and Performance Metrics
 
@@ -168,7 +166,7 @@ keywords_99_modelfit <- keywords_99[['incomplete']]+keywords_99[['model fit; inc
 
 For the training of the BERT models and to assess their final performance, I labeled all automatically extracted statements that were detected from an article's results section from Papercheck's sample library. This resulted in `r nrow(labeled_results)` statements in total. Of these, `r nrow(labeled_results_0)` were classified as containing a correct *p* value interpretation, and `r nrow(labeled_results_1)` were classified as incorrect *p* value misinterpretations. The remaining `r nrow(labeled_results_99)` statements were classified as neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (`r keywords_99_marginally`), because the statements were not complete enough to check their correctness (`r keywords_99_incomplete`), because they interpreted model fit indices and not the *p* value (`r keywords_99_modelfit`), because they were falsely flagged as containing a nonsignificant *p* value (e.g., significant *p* values or generic '*p* > .05 indicated by symbol xy' statements from table/figure notes; `r keywords_99_flaseflag` in total), or due to a combination of these or other reasons (`r nrow(labeled_results_99)-keywords_99_flaseflag-keywords_99_incomplete-keywords_99_marginally-keywords_99_modelfit`).
 
-Lastly I reviewed 100 statements that were sent to an LLM to be corrected, to see if the LLM-revised statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with false positives from the automated classification.
+Lastly I reviewed 100 statements that were sent to an LLM to be corrected, to see if the LLM-revised statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with false positives from the automated classification. I used X different prompts, which had between X and Y words. In short, the model was first explained that it would get a statement with at least one misinterpretations of a nonsignificant finding as the absence of an effect and then instructed to change only parts of the statements that relate to this misinterpretations, but keep the rest of the statement unchanged. I later added XXX. The full promps are available on GitHub (see Section 2.3). Papercheck uses the Groq API (available at <https://groq.com/>) to enable users to communicate with different LLMs. I, in turn, used Papercheck's default model: 'llama-3.3-70b-versatile' (as of 07/24/2025).
 
 In addition to these validity checks, I also calculated performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model, a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters, and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data). Before the data was split into these three parts, I balanced the number of correct and incorrect *p* values (originally there were more correct than incorrect interpretations) to ensure that the model would not overfit to this class-imbalance.
 
@@ -433,7 +431,7 @@ tbl %>%
   flextable::theme_apa()
 ```
 
-Since SciBERT performed best in the classification task, @tbl-false-classification shows some of its incorrect predictions to illustrate the types of sentences that the model failed to classify correctly. [DISCUSS  THESE SOMEWHERE!!!]
+Since SciBERT achieved the highest performance in the classification task, @tbl-false-classification presents examples of its misclassifications to illustrate the types of sentences that posed difficulties for the model. Potential reasons for these errors will be examined in the discussion.
 
 ```{r}
 #| label: tbl-false-classification
@@ -559,6 +557,16 @@ df_long %>%
 
 # 4 Discussion
 
+**Things I still need do add:**
+
+-HOW TO DEAL WITH CLASSIFICATION ERRORS AND PARAGRAPH DESCRIBING MODEL MISCLASSIFICATIONS (AND TRY TO EXPLAIN THEM)!
+
+-PARAGRAPH ON WHETHER WE NEED OR EVEN WANT THE CORRECTION BIT. MENTION THAT FURTHER PROMPT ENGINEERING MIGHT BE ABLTE TO FIX THIS [FALSE CORRECTIONS OF FALSE POSITIVES THAT GET TURNED INTO INCORRECT STATEMENTS]
+
+-CITE AND EXPLAIN @bucher_martini24!!! MAYBE USE LLMS FOR EVERYTHING IN THE FUTURE?
+
+-PARAGRAPH ON THE CLASSIFIERS' PROBLEMS WITH SOME OF THE STATEMENTS
+
 ## 4.1 Summary of Key Results
 
 In this study, I developed and evaluated a three-step pipeline for automatically correcting misinterpretations of nonsignificant results as evidence for the absence of an effect. The approach combines rule-based RegEx searches for detecting candidate statements, fine-tuned BERT models for classification, and LLMs to generate corrected phrasings. While each step leaves room for improvement, the overall pipeline performed well and shows promise for broader applications beyond *p* value misinterpretations.
@@ -573,15 +581,13 @@ The final step, generating LLM-revised corrections of the original statements, s
 
 ## 4.2 Limitations and Challenges
 
-HOW TO DEAL WITH CLASSIFICATION ERRORS AND PARAGRAPH DESCRIBING MODEL MISCLASSIFICATIONS (AND TRY TO EXPLAIN THEM)!
-
-PARAGRAPH ON WHETHER WE NEED OR EVEN WANT THE CORRECTION BIT. MENTION THAT FURTHER PROMPT ENGINEERING MIGHT BE ABLTE TO FIX THIS [FALSE CORRECTIONS OF FALSE POSITIVES THAT GET TURNED INTO INCORRECT STATEMENTS]
-
 Despite the encouraging results, several limitations must be acknowledged. First, the pipeline components were evaluated independently rather than as a fully integrated system. While each step (detection, classification, correction) showed strong performance on its own, cascading errors in a full pipeline will likely reduce the end accuracy. Still, any flagged misinterpretation should alert authors that their interpretation may require reconsideration.
 
 Second, the manual annotation of training data introduces inevitable subjectivity. While I made efforts to standardize labels - often consulting a statistics expert (my supervisor) on difficult or borderline cases - the classifications reflect my interpretation of what constitutes a misinterpretation. Ideally, multiple annotators and inter-rater agreement metrics would improve the reliability and generalizability of the training data. However, the fact that the fine-tuned BERT models generalized well to unseen data suggests that the labeling was systematic enough to allow the models to learn. Nevertheless, a reader might disagree with how some example statements in this article were labeled, and I invite anyone to rerun these models with alternatives to the current version of the labeled dataset.[^3]
 
 [^3]: You can simply clone the GitHub repository, adjust statements' labels that you think are incorrect and re-run the training scripts to get all results and plots showing the models performance!
+
+**COMMENT FROM DANIEL**: Add "There is a surprising lack of conceptual work on how p values should be interpreted correctly, given the many papers focusing on their misinterpretations. For example, should is ‘no significant difference’ a correct interpretation, when some researchers have suggested to abandon the word ‘significant’?"
 
 A more practical challenge involves managing the tradeoff between false positives and false negatives. The current models aim to balance both for optimal macro performance. However, in practice, different use cases may prioritize one over the other. For example, an individual researcher using the system to improve their writing may prefer fewer false negatives (i.e., catching as many problematic statements as possible), even at the cost of some false positives. Conversely, a meta-scientist analyzing prevalence trends of this misinterpretation may prioritize precision to avoid overestimating misinterpretations. This issue can be mitigated by allowing users to adjust the model's decision threshold to fit their specific goals in a future Papercheck module based on this work.
 
