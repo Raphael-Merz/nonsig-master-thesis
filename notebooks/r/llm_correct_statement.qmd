@@ -22,10 +22,14 @@ library(readxl)
 
 ### Load data
 
+I originally ran this code to get a random subset of 80 incorrect and 20 correct statements from the classifier training data. Since I made a few changes afterwards, the set.seed() now chooses different statements. Therefore, to use the same 100 statements and send them to an LLM, I now load these original 100 statements from the first iteration of the llm_correction_check.
+
 ```{r}
+#| eval: false
+#| include: false
 data_path <- "../../data/training_data/labeled/labeled_data.xlsx" # path to where the csv with human-labeled statements is
 
-corrected_path <- "../../data/llm_correction_check/llm_correction_unchecked.csv"# path to where the final csv with the corrected statements should be stored
+corrected_path <- "../../data/llm_correction_check/"# path to where the final csv with the corrected statements should be stored
 
 # Load data
 labeled_data <- read_excel(data_path)
@@ -38,11 +42,15 @@ subset_df <- labeled_data %>%
 set.seed(42)  # for reproducibility
 subset_sample <- bind_rows(
   sample_n(filter(subset_df, label == 1), 80),
-  sample_n(filter(subset_df, label == 0), 20)
-)
+  sample_n(filter(subset_df, label == 0), 20))
 
 # Shuffle the combined set
 subset_sample <- subset_sample %>% sample_frac(1)
+```
+
+```{r}
+# Get 100 Statements from original LLM_correction_check; see explanation above
+original_statements <- read.csv2("../../data/llm_correction_check/llm_correction_unchecked_1.0.csv")[,1:2]
 ```
 
 ### Check llm() setup
@@ -63,10 +71,26 @@ if (Sys.getenv("GROQ_API_KEY") != "") {
 
 ## 1 Send incorrect statements to LLM
 
-### Prompt
+### LLM setup
 
 ```{r}
-prompt <- "
+temperature = .5 # papercheck explanation: Controls randomness in responses. Lower values make responses more deterministic. Recommended range: 0.5-0.7 to prevent repetitions or incoherent outputs; valued between 0 inclusive and 2 exclusive
+
+# if you want to specify a specific model and not use the llm()-standard
+# model = "your_model_here"
+llm_model_list() # for a list of all available models
+
+# there is a model specific rate limit for the groq API. The default is set to 30. If you want to change it, run this code and adjust the rate limit accordingly
+# llm_max_calls(30)
+
+# not best Practice, but for now I set llm_max_calls() to 100 and send all statements at once
+llm_max_calls(nrow(original_statements))
+```
+
+### Version 1.0
+
+```{r}
+prompt_1.0 <- "
 Below you see a statement that was classified as a misinterpretation of a nonsignificant finding as the absence of an effect. This could be because the authors explicitly say that there is or was no effect/difference/association etc., but they could also say that groups/conditions etc. where similar/comparable or something similar.
 
 Your job is to correct this. It could be that there is a correct and an incorrect interpretation (e.g., first 'no significant difference' and then 'there was no effect'), or multiple incorrect interpretations. Ignore any other potentially problematic things in the statements and try to stay as close to the originaly statement as possible, while still fixing any misinterpretations as no effect/similar, like described above.
@@ -79,49 +103,97 @@ Here's the statement with the misinterpretation:
 "
 ```
 
-### LLM setup
+#### Ping LLM and store response (v1.0)
 
 ```{r}
-temperature = .5 # papercheck explanation: Controls randomness in responses. Lower values make responses more deterministic. Recommended range: 0.5-0.7 to prevent repetitions or incoherent outputs; valued between 0 inclusive and 2 exclusive
-
-# if you want to specify a specific model and not use the llm()-standard
-# model = "your_model_here"
-llm_model_list() # for a list of all available models
-
-# there is a model specific rate limit for the groq API. The default is set to 30. If you want to change it, run this code and adjust the rate limit accordingly
-# llm_max_calls(30)
-```
-
-### Ping LLM and store response
-
-```{r}
-# not best Practice, but for now set llm_max_calls() to 100 and send all statements at once
-llm_max_calls(nrow(subset_sample))
-
 # send each incorrect statement from the labeled dataset with above prompt to the llm
-llm_response <- llm(text = subset_sample$statement, query = prompt)
+llm_response_1.0 <- llm(text = original_statements$statement, query = prompt_1.0, model = "llama-3.3-70b-versatile")
 
-head(llm_response)
-```
-
-## 2 Save csv with corrected statements
-
-### Combining labeled_data with llm_response
-
-```{r}
 # Store in new dataframe
-corrected <- subset_sample
+corrected_1.0 <- original_statements
 
 # Save llm_response in corrected
-corrected$corrected <- llm_response$answer
+corrected_1.0$corrected <- llm_response_1$answer
 
 # Head 'corrected'
-head(corrected)
+head(corrected_1.0)
 ```
-
-### Save csv
 
 ```{r}
 # save file as csv (csv2 because I will manually go through them)
-write.csv2(corrected, file = corrected_path, row.names = F)
+write.csv2(corrected_1.0, file = paste0(corrected_path,"llm_correction_unchecked_1.0.csv"), row.names = F)
+```
+
+### Version 1.1 (newer model)
+
+```{r}
+prompt_1.1 <- "
+Below you see a statement that was classified as a misinterpretation of a nonsignificant finding as the absence of an effect. This could be because the authors explicitly say that there is or was no effect/difference/association etc., but they could also say that groups/conditions etc. where similar/comparable or something similar.
+
+Your job is to correct this. It could be that there is a correct and an incorrect interpretation (e.g., first 'no significant difference' and then 'there was no effect'), or multiple incorrect interpretations. Ignore any other potentially problematic things in the statements and try to stay as close to the originaly statement as possible, while still fixing any misinterpretations as no effect/similar, like described above.
+
+Your response should only be the new, corrected version of the statement an nothing else.
+
+If a statement very clearly contains no nonsignificant p value or no interpretation of it, or the statement doesn't seem to be complete or, e.g., part of a table and no sentence or so, reply with only 'NO CORRECTION POSSIBLE'.
+
+Here's the statement with the misinterpretation:
+"
+```
+
+#### Ping LLM and store response (v1.1)
+
+```{r}
+# send each incorrect statement from the labeled dataset with above prompt to the llm
+llm_response_1.1 <- llm(text = original_statements$statement, query = prompt_1.1, model = "openai/gpt-oss-120b")
+
+# Store in new dataframe
+corrected_1.1 <- original_statements
+
+# Save llm_response in corrected
+corrected_1.1$corrected <- llm_response_1.1$answer
+
+# Head 'corrected'
+head(corrected_1.1)
+```
+
+```{r}
+# save file as csv (csv2 because I will manually go through them)
+write.csv2(corrected_1.1, file = paste0(corrected_path,"llm_correction_unchecked_1.1.csv"), row.names = F)
+```
+
+### Version 2.0 (newer model and changed prompts)
+
+```{r}
+prompt_2.0 <- "
+Below you see a statement that was classified as a misinterpretation of a nonsignificant finding as the absence of an effect. This could be because the authors make an absolute statement about there being no effect (e.g., 'there was no effect/difference/association', 'X was the same across groups/conditions'), or because they strongly hint towards the idea that an effect is not practically relevant just based on the statistical significance (e.g., 'groups were similar/comparable' or 'X was similar/comparable across conditions'). Both are incorrect and should be avoided.
+
+Your job is to correct these misinterpretations. It could be that there are both correct and incorrect interpretations (e.g., first 'no significant difference' and then 'there was no effect') in a given statement. Also ignore any other potentially problematic aspects of these statements and try to stay as close to the originaly statement as possible, while still fixing any misinterpretations as no effect or groups being similar/comparable, etc., like described above.
+
+Also avoid statements like '(the data) did not provide evidence...' (no evidence is also an absolute statement) or unnecessary additions like '[nonsig finding], indicating ...'.
+
+Your response should only be the new, corrected version of the statement and nothing else.
+
+Here's the statement with the misinterpretation:
+"
+```
+
+#### Ping LLM and store response (v2.0)
+
+```{r}
+# send each incorrect statement from the labeled dataset with above prompt to the llm
+llm_response_2.0 <- llm(text = original_statements$statement, query = prompt_2.0, model = "openai/gpt-oss-120b")
+
+# Store in new dataframe
+corrected_2.0 <- original_statements
+
+# Save llm_response in corrected
+corrected_2.0$corrected <- llm_response_2.0$answer
+
+# Head 'corrected'
+head(corrected_2.0)
+```
+
+```{r}
+# save file as csv (csv2 because I will manually go through them)
+write.csv2(corrected_2.0, file = paste0(corrected_path,"llm_correction_unchecked_2.0.csv"), row.names = F)
 ```
