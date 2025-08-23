@@ -124,7 +124,7 @@ head(corrected_1.0)
 write.csv2(corrected_1.0, file = paste0(corrected_path,"llm_correction_unchecked_1.0.csv"), row.names = F)
 ```
 
-### Version 1.1 (newer model)
+### Version 1.1 (newer model, same prompt)
 
 ```{r}
 prompt_1.1 <- "
@@ -161,7 +161,7 @@ head(corrected_1.1)
 write.csv2(corrected_1.1, file = paste0(corrected_path,"llm_correction_unchecked_1.1.csv"), row.names = F)
 ```
 
-### Version 2.0 (newer model and changed prompts)
+### Version 2.0 (newer model, changed prompts)
 
 ```{r}
 prompt_2.0 <- "
