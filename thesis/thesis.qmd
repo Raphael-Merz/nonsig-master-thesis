@@ -78,7 +78,7 @@ Before describing the data used in this study, it is important to understand the
 
 To detect statements I used rule-based regular expressions (RegEx) and searched articles' results sections to detect these expressions. Effectively, RegEx searchers are advanced Ctrl+F searches, where a user can include rules like optional characters (e.g., 'significant(ly)' would catch both *significant* and *significantly*) and more complex rules (e.g., 'not.{0,20}significant' allows up to 20 characters between *not* and *significant*). Papercheck has a module that detects almost all *p* values (see Section 3.1 for examples of what it does not currently detect) based on RegEx searches. Using this module, I created a subset of all *p* values equal to or above .05. I then expanded the extracted nonsignificant *p* values to the full sentence and added +/- one sentence as context in case of extraction errors (incomplete statements).[^1]
 
-[^1]: In a final tool, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.
+[^1]: In a final Papercheck module, users will be able to set the alpha level they used themselves, thus allowing other levels than the conventional 5%.
 
 In the next step, these statements (labeled as correct or incorrect by me; see Section 2.2) were used to train three BERT-based models. BERT (Bidirectional Encoder Representations from Transformers) is a general-purpose language model pre-trained on the BookCorpus and English Wikipedia, making it suitable for a wide range of tasks – but not specifically optimized for scientific or technical language [@devlin_etal19]. Since its introduction, many researchers have developed domain-specific variants of BERT to enhance its performance on specialized tasks. To test whether such domain adaptation improves performance in this study's classification task, I trained two models in addition to standard BERT: SciBERT was trained on a large corpus of scientific articles from Semantic Scholar, particularly in the biomedical and computer science domains [@beltagy_etal19]. PubMedBERT is an even more specific pretrained language model, having been trained exclusively on biomedical abstracts and full-text articles from the PubMed database [@gu_etal22]. These models were trained and evaluated on their ability to distinguish between correct and incorrect interpretations of nonsignificant results in scientific writing. The models’ hyperparameters (e.g., learning rate, batch size) were informed by established defaults in the field (see https://huggingface.co/docs/transformers/en/main_classes/trainer) and relevant tutorials [@more25; @talebi24], with further refinements to improve models' prediction performance.
 
@@ -166,7 +166,9 @@ keywords_99_modelfit <- keywords_99[['incomplete']]+keywords_99[['model fit; inc
 
 For the training of the BERT models and to assess their final performance, I labeled all automatically extracted statements that were detected from an article's results section from Papercheck's sample library. This resulted in `r nrow(labeled_results)` statements in total. Of these, `r nrow(labeled_results_0)` were classified as containing a correct *p* value interpretation, and `r nrow(labeled_results_1)` were classified as incorrect *p* value misinterpretations. The remaining `r nrow(labeled_results_99)` statements were classified as neither correct nor incorrect because they interpreted the nonsignificant effect as (marginally) significant (`r keywords_99_marginally`), because the statements were not complete enough to check their correctness (`r keywords_99_incomplete`), because they interpreted model fit indices and not the *p* value (`r keywords_99_modelfit`), because they were falsely flagged as containing a nonsignificant *p* value (e.g., significant *p* values or generic '*p* > .05 indicated by symbol xy' statements from table/figure notes; `r keywords_99_flaseflag` in total), or due to a combination of these or other reasons (`r nrow(labeled_results_99)-keywords_99_flaseflag-keywords_99_incomplete-keywords_99_marginally-keywords_99_modelfit`).
 
-Lastly I reviewed 100 statements that were sent to an LLM to be corrected, to see if the LLM-revised statements were actually correct. Of these 100 statements, 80 had previously been labeled incorrect and 20 correct by me, to check how the LLM deals with false positives from the automated classification. I used X different prompts, which had between X and Y words. In short, the model was first explained that it would get a statement with at least one misinterpretations of a nonsignificant finding as the absence of an effect and then instructed to change only parts of the statements that relate to this misinterpretations, but keep the rest of the statement unchanged. I later added XXX. The full promps are available on GitHub (see Section 2.3). Papercheck uses the Groq API (available at <https://groq.com/>) to enable users to communicate with different LLMs. I, in turn, used Papercheck's default model: 'llama-3.3-70b-versatile' (as of 07/24/2025).
+Lastly, I reviewed 100 statements that were sent to an LLM for correction to evaluate whether the revised statements were correct. Of these, 80 had previously been labeled incorrect and 20 correct, allowing me to examine how the LLM handled false positives from the automated classification. To communicate with the models, I used Papercheck, which relies on the Groq API (available at https://groq.com/). I tested two LLMs - 'llama-3.3-70b-versatile' (created 03-09-2023) and 'openai/gpt-oss-120b' (created 05-08-2025) - and experimented with two prompts on the full validation dataset of 100 statements. This resulted in three iterations: (1) the initial prompt with the 'llama-3.3-70b-versatile' model, (2) the same prompt with 'openai/gpt-oss-120b', and (3) a refined prompt, developed through prelumanry tests on subsets of the 100 statements/validation data, with 'openai/gpt-oss-120b'.
+
+Both prompt versions first explained to the LLM that it would receive a statement containing at least one misinterpretation of a nonsignificant finding as the absence of an effect and then instructed it to revise only the part of the statement containing this misinterpretation, while leaving the rest unchanged. The refined prompt also included additional guidance on phrasing to avoid, based on common errors that still appeared in the revisions from the initial prompt. Finally, the first prompt instructed the LLM to respond with “NO CORRECTION POSSIBLE” if it found no interpretation of a nonsignificant finding, but this instruction was removed in the refined version because the LLM overused this option, which blurred the line between statement detection, classification and correction . Both prompts are available on GitHub (see Section 2.3).
 
 In addition to these validity checks, I also calculated performance metrics specific to the trained classifiers. For training purposes, the labeled data was split into three parts: a test set (20%) used for the final evaluation of the best model, a training set (72%, or 90% of the remaining 80%) that the model uses to learn underlying patterns and adjust its parameters, and a validation set (8%, or 10% of the 80%) used to calculate evaluation metrics after each epoch (i.e., one full cycle of the model processing the training data). Before the data was split into these three parts, I balanced the number of correct and incorrect *p* values (originally there were more correct than incorrect interpretations) to ensure that the model would not overfit to this class-imbalance.
 
@@ -309,9 +311,9 @@ During BERT training I computed the training loss (sum of errors between model p
 
 ## 2.3 Software
 
-All scripts for this thesis project were written in R [Version 4.5.0; @rcoreteam25] or Python [Version 3.12.10; @python].
+All scripts for this thesis project were written in R [Version 4.5.0\; @rcoreteam25] or Python [Version 3.12.10\; @python].
 
-In R, I used *papercheck* [Version 0.0.0.9049; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9; @R-flextable], *magick* [Version 2.8.7; @R-magick], *papaja* [Version 0.1.3; @R-papaja] and *showtext* [Version 0.9-7; @R-showtext] to create APA-formatted tables and figures.
+In R, I used *papercheck* [Version 0.0.0.9049\; @R-papercheck] for accessing the 250 open access articles, preprocess them and for communication with the LLM, *readxl* [Version 1.4.5\; @R-readxl] to access Excel files in R, *psych* [Version 2.5.6\; @R-psych] for calculating descriptive statistics, *tidyverse* [Version 2.0.0\; @R-tidyverse] for data preprocessing and visualization, and *flextable* [Version 0.9.9\; @R-flextable], *magick* [Version 2.8.7\; @R-magick], *papaja* [Version 0.1.3\; @R-papaja] and *showtext* [Version 0.9-7\; @R-showtext] to create APA-formatted tables and figures.
 
 All scripts and data to reproduce and use the trained BERT models (Python), analyse the results and validity checks (R and Python), recreate this manuscript (Quarto Markdown in R Studio with the apaquarto extension available at: https://wjschne.github.io/apaquarto/), as well as the list of Python libraries used to train the BERT models are available in this GitHub repository, together with instructions on how to set it up: LINK.
 
@@ -457,19 +459,64 @@ tibble(
 
 ```{r}
 #| include: false
-llm_corrections <- read_excel("../data/llm_correction_check/llm_correction_checked.xlsx")
+#####################
+####             ####
+#### Version 1.0 ####
+####             ####
+#####################
 
-n_correct <- sum(llm_corrections$corrected_correct == 0)
-n_incorrect <- sum(llm_corrections$corrected_correct == 1)
+llm_corrections_1.0 <- read_excel("../data/llm_correction_check/llm_correction_checked_1.0.xlsx")
 
-n_0_correct <- sum(llm_corrections$label == 0 & llm_corrections$corrected_correct == 0)
-n_0_incorrect <- sum(llm_corrections$label == 0 & llm_corrections$corrected_correct == 1)
+n_correct_1.0 <- sum(llm_corrections_1.0$corrected_correct == 0)
+n_incorrect_1.0 <- sum(llm_corrections_1.0$corrected_correct == 1)
 
-n_1_correct <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 0)
-n_1_incorrect  <- sum(llm_corrections$label == 1 & llm_corrections$corrected_correct == 1)
+n_0_correct_1.0 <- sum(llm_corrections_1.0$label == 0 & llm_corrections_1.0$corrected_correct == 0)
+n_0_incorrect_1.0 <- sum(llm_corrections_1.0$label == 0 & llm_corrections_1.0$corrected_correct == 1)
+
+n_1_correct_1.0 <- sum(llm_corrections_1.0$label == 1 & llm_corrections_1.0$corrected_correct == 0)
+n_1_incorrect_1.0  <- sum(llm_corrections_1.0$label == 1 & llm_corrections_1.0$corrected_correct == 1)
+
+#####################
+####             ####
+#### Version 1.1 ####
+####             ####
+#####################
+
+llm_corrections_1.1 <- read_excel("../data/llm_correction_check/llm_correction_checked_1.1.xlsx")
+
+n_correct_1.1 <- sum(llm_corrections_1.1$corrected_correct == 0)
+n_incorrect_1.1 <- sum(llm_corrections_1.1$corrected_correct == 1)
+
+n_0_correct_1.1 <- sum(llm_corrections_1.1$label == 0 & llm_corrections_1.1$corrected_correct == 0)
+n_0_incorrect_1.1 <- sum(llm_corrections_1.1$label == 0 & llm_corrections_1.1$corrected_correct == 1)
+
+n_1_correct_1.1 <- sum(llm_corrections_1.1$label == 1 & llm_corrections_1.1$corrected_correct == 0)
+n_1_incorrect_1.1  <- sum(llm_corrections_1.1$label == 1 & llm_corrections_1.1$corrected_correct == 1)
+
+n_0_not_corrected_1.1 <- sum(llm_corrections_1.1$label == 0 & llm_corrections_1.1$corrected == "NO CORRECTION POSSIBLE")
+n_1_not_corrected_1.1 <- sum(llm_corrections_1.1$label == 1 & llm_corrections_1.1$corrected == "NO CORRECTION POSSIBLE")
+
+#####################
+####             ####
+#### Version 2.0 ####
+####             ####
+#####################
+
+llm_corrections_2.0 <- read_excel("../data/llm_correction_check/llm_correction_checked_2.0.xlsx")
+
+n_correct_2.0 <- sum(llm_corrections_2.0$corrected_correct == 0)
+n_incorrect_2.0 <- sum(llm_corrections_2.0$corrected_correct == 1)
+
+n_0_correct_2.0 <- sum(llm_corrections_2.0$label == 0 & llm_corrections_2.0$corrected_correct == 0)
+n_0_incorrect_2.0 <- sum(llm_corrections_2.0$label == 0 & llm_corrections_2.0$corrected_correct == 1)
+
+n_1_correct_2.0 <- sum(llm_corrections_2.0$label == 1 & llm_corrections_2.0$corrected_correct == 0)
+n_1_incorrect_2.0  <- sum(llm_corrections_2.0$label == 1 & llm_corrections_2.0$corrected_correct == 1)
 ```
 
-Of the 100 statements that the LLM was instructed to correct `r n_correct` were correct. Notably, `r n_0_incorrect` of the 20 already correct statements got turned incorrect by the LLM. `r n_0_correct`, on the other hand, remained correct. Similarly, the LLM actually corrected `r n_1_correct` of the 80 incorrect statements, whereas `r n_1_incorrect` remained incorrect. Note, however, that the LLM was instructed to change (as much as necessary, but) as little as possible about the original statement. For some statements that fundermentally misinterpreted what *p* values mean, this meant that they could not be corrected without major rephrasing. Examples for some bad/good corrections can be found in @tbl-LLM-corrections-1 and @tbl-LLM-corrections-2, respectively.
+Of the 100 statements that the LLM was instructed to correct `r n_correct_1.0` were judged as correct. Notably, `r n_0_incorrect_1.0` of the 20 already correct statements were turned incorrect by the LLM, and `r n_1_incorrect_1.0` of the 80 incorrect statements remained incorrect. Using the newer 'openai/gpt-oss-120b' model, `r n_correct_1.1` were correct. However, the model overused the 'NO CORRECTION POSSIBLE' option (originally intended to prevent detection errors) which resulted in `r n_0_not_corrected_1.1` correct and `r n_1_not_corrected_1.1` incorrect statements being left unrevised. In the final iteration, with the newer model and revised prompt, `r n_correct_2.0` of the 100 statements were correct. Of the remaining `r n_incorrect_2.0` statements, XXX were originally incorrect statement that remained incorrect, whereas the other YYY did not misinterpret nonsignificance but contained other problems: in one case, the LLM removed all *p* values and interpreted the effects as significant, and in another, it altered the statement's meaning substantially. Examples of both poor and strong LLM-revisions from this final iteration are shown in @tbl-LLM-corrections-1 and @tbl-LLM-corrections-2, respectively.
+
+**Above paragraph needs to be updated after discussion on how to code some of them with Daniel! Also need to update below tables after that**
 
 ```{r}
 #| label: tbl-LLM-corrections-1
@@ -477,24 +524,24 @@ Of the 100 statements that the LLM was instructed to correct `r n_correct` were 
 #| warning: false
 #| apa-note: Table of original and LLM-revised statements that were classified as incorrect. In the examples '0' refers to correct and '1' to incorrect.
 #| ft-align: left
-#| tbl-cap: Examples of Incorrect LLM Corrections
+#| tbl-cap: Examples of Incorrect LLM-Revisions
 
 # Your selected example indices
 examples <- c(60, 80)
 
 # Fix 'ÃŽÂ²' in statements --> should be beta
-llm_corrections$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$statement)
-llm_corrections$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$corrected)
+llm_corrections_2.0$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$statement)
+llm_corrections_2.0$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$corrected)
 
 # Create long format table
 df_long <- map_dfr(examples, function(i) {
-  example_label <- paste0("Example ", llm_corrections$label[i], " to ", llm_corrections$corrected_correct[i])
+  example_label <- paste0("Example ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
   
   tibble(
     Example = rep(example_label, 2),
     `Statement Type` = c("Original", "LLM-revised"),
-    Statement = c(llm_corrections$statement[i], llm_corrections$corrected[i]),
-    Label = as.character(c(llm_corrections$label[i], llm_corrections$corrected_correct[i]))
+    Statement = c(llm_corrections_2.0$statement[i], llm_corrections_2.0$corrected[i]),
+    Label = as.character(c(llm_corrections_2.0$label[i], llm_corrections_2.0$corrected_correct[i]))
   )
 })
 
@@ -517,26 +564,26 @@ df_long %>%
 #| label: tbl-LLM-corrections-2
 #| message: false
 #| warning: false
-#| apa-note: Table of original and LLM-revised statements that were classified as incorrect. In the examples '0' refers to correct and '1' to incorrect.
+#| apa-note: Table of original and LLM-revised statements that were classified as correct. In the examples '0' refers to correct and '1' to incorrect.
 #| ft-align: left
-#| tbl-cap: Examples of Correct LLM Corrections
+#| tbl-cap: Examples of Correct LLM-Revisions
 
 # Your selected example indices
 examples <- c(10, 79)
 
 # Fix 'ÃŽÂ²' in statements --> should be beta
-llm_corrections$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$statement)
-llm_corrections$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections$corrected)
+llm_corrections_2.0$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$statement)
+llm_corrections_2.0$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$corrected)
 
 # Create long format table
 df_long <- map_dfr(examples, function(i) {
-  example_label <- paste0("Example ", llm_corrections$label[i], " to ", llm_corrections$corrected_correct[i])
+  example_label <- paste0("Example ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
   
   tibble(
     Example = rep(example_label, 2),
     `Statement Type` = c("Original", "LLM-revised"),
-    Statement = c(llm_corrections$statement[i], llm_corrections$corrected[i]),
-    Label = as.character(c(llm_corrections$label[i], llm_corrections$corrected_correct[i]))
+    Statement = c(llm_corrections_2.0$statement[i], llm_corrections_2.0$corrected[i]),
+    Label = as.character(c(llm_corrections_2.0$label[i], llm_corrections_2.0$corrected_correct[i]))
   )
 })
 
@@ -566,6 +613,8 @@ df_long %>%
 -CITE AND EXPLAIN @bucher_martini24!!! MAYBE USE LLMS FOR EVERYTHING IN THE FUTURE?
 
 -PARAGRAPH ON THE CLASSIFIERS' PROBLEMS WITH SOME OF THE STATEMENTS
+
+- GO back to human factors component, maybe int he part about LLM-corrections?
 
 ## 4.1 Summary of Key Results
 
