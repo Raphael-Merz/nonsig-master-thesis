@@ -1,6 +1,6 @@
 ---
 title: "From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant *p* Values"
-shorttitle: "Hybrid NLP for Correcting p Value Misinterpretations"
+shorttitle: "Rules and NLP for Correcting p Value Misinterpretations"
 author:
   - name: Raphael Merz
     corresponding: true
@@ -23,7 +23,7 @@ author-note:
     financial-support: null
     gratitude: null
     authorship-agreements: null
-abstract: "Misinterpretations of *p* values remain widespread in scientific reporting, despite decades of educational efforts and reform initiatives. One of the most common and consequential errors is interpreting a statistically nonsignificant result (e.g., *p* > .05) as evidence for the absence of an effect—a conclusion not supported by null hypothesis significance testing (NHST). This thesis adopts a human factors perspective, arguing that automation can help mitigate such persistent errors, much like word processors assist with grammar and spelling. I propose an automated, three-step pipeline that detects, classifies, and optionally corrects misinterpretations of nonsignificant results. Evaluation of each step highlights the promise of such an automated approach: In a validation set of 25 articles the automatic detection identified 73% of human-extracted statements. Two easily resolvable issues in the search pattern were found which, once addressed, would increase this reliability to 93%. For classification, three BERT-based models were trained on 930 hand-labeled statements. All performed well, with SciBERT achieving the highest macro F1 score of .91. Finally, the optional correction step proved effective in a validation set of 80 incorrect and 20 correcct statements: 85 statements were correctly phrased after LLM-based revision. These results demonstrate that automation can effectively address this specific misinterpretation and offer a flexible foundation for tackling similar issues in scientific writing and meta-research."
+abstract: "Misinterpretations of *p* values remain widespread in scientific reporting, despite decades of educational efforts and reform initiatives. One of the most common and consequential errors is interpreting a statistically nonsignificant result (e.g., *p* > .05) as evidence for the absence of an effect — a conclusion not supported by null hypothesis significance testing (NHST). This thesis adopts a human factors perspective, arguing that automation can help mitigate such persistent errors, much like word processors assist with grammar and spelling. I propose an automated, three-step pipeline that detects, classifies, and optionally corrects misinterpretations of nonsignificant results. Evaluation of each step highlights the promise of such an automated approach: In a validation set of 25 articles the automatic detection identified 73% of human-extracted statements. Two easily resolvable issues in the search pattern were found which, once addressed, would increase this reliability to 93%. For classification, three BERT-based models were trained on 930 hand-labeled statements. All models performed well, with the standard BERT model achieving the highest macro F1 score of .92. Finally, the optional correction step proved effective in a validation set of 80 incorrect and 20 correcct statements: 93 statements were correctly phrased after LLM-based revision. These results demonstrate that automation can effectively address this specific misinterpretation and offer a flexible foundation for tackling similar issues in scientific writing and meta-research."
 keywords: [p value, misinterpretation, automation, automated checks, RegEx, LLMs, BERT]
 floatsintext: true
 numbered-lines: false
@@ -58,7 +58,7 @@ In this article, I show how rule-based approaches, combined with natural languag
 
 The criticism of *p* values has become a prominent and recurring theme in discussions around scientific reform. From claims that they encourage dichotomous thinking [@hoekstra_etal06; @amrhein_etal19] to arguments that they offer little informational value [@wagenmakers07], *p* values – and the broader framework of NHST – have been blamed for many of science’s replication problems [@mcshane_etal19]. On the other hand, many have also argued that NHST per se is not to blame for these problems, but rather how researchers (mis)use and (mis)interpret this tool [e.g., @greenland19; @lakens21]. As a result, many researchers present whole collections of, in their view, common *p* value misinterpretations [see, e.g., @goodman08; @greenland_etal16].
 
-In this study I zoom in on one specific misinterpretation: concluding *no effect* based on a statistically nonsignificant finding. Many studies have previously shown that this misinterpretation remains highly prevalent across time and sub-domains of psychology [@aczel_etal18; @hoekstra_etal06; @murphy_etal25]. In fact, in a recently published article investigating articles published in 2009, 2015, and 2021 across ten different psychology journals, we estimated the prevalence of this misinterpretation in articles’ discussion sections to lie between 76.17% and 84.90% [@murphy_etal25]. These findings highlight that the situation seems not to have greatly improved despite continuous calls to reflect on statistical interpretations of nonsignificant results [e.g., @mcshane_etal19, **add other source?**] and and increasing advocacy for alternative analytical approaches that enable researchers to make informed claims about effects being practically equivalent to zero [e.g., @dienes14 add this article https://doi.org/10.3389/fpsyg.2014.00781; @lakens_etal18].
+In this study I zoom in on one specific misinterpretation: concluding *no effect* based on a statistically nonsignificant finding. Many studies have previously shown that this misinterpretation remains highly prevalent across time and sub-domains of psychology [@aczel_etal18; @hoekstra_etal06; @murphy_etal25]. In fact, in a recently published article investigating articles published in 2009, 2015, and 2021 across ten different psychology journals, we estimated the prevalence of this misinterpretation in articles’ discussion sections to lie between 76.17% and 84.90% [@murphy_etal25]. These findings highlight that the situation seems not to have greatly improved despite continuous calls to reflect on statistical interpretations of nonsignificant results [e.g., @altman_bland95; @gelman_stern06] and and increasing advocacy for alternative analytical approaches that enable researchers to make informed claims about effects being practically equivalent to zero [e.g., @dienes14; @lakens_etal18].
 
 ## 1.2 Possible Solutions
 
@@ -74,9 +74,7 @@ Following this trend, @R-papercheck developed Papercheck, an R package, which al
 
 # 2 Methods
 
-## 2.1 Statement Detection, Classification and Correction
-
-**--> Change 2.1 heading <--**
+## 2.1 The Thee-Step Pipeline
 
 To provide context for the data used in this study, I first outline the three sub-steps of the proposed pipeline. Statements from scientific articles need to be reliably detected, classified, and finally, if desired, corrected. For each step, I applied specific methods that were best suited to achieve the respective goal.
 
@@ -357,7 +355,7 @@ keywords_ps <- keywords_table[['p_s']]
 
 ## 3.1 Detection Accuracy
 
-By manually reviewing 25 articles from Papercheck’s sample library, I identified `r agreement_1+agreement_2+agreement_3_FN` statements containing a nonsignificant p value. The automated RegEx search fully detected `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these, and partially detected `r agreement_3_FN` due to extraction errors, often caused by PDF formatting (page breaks, figures, or footnotes). The search also produced `r agreement_3_FP` false positives - statements incorrectly labeled as coming from the results section, but actually originating from other sections, or from table or figure notes. Note, however, that most of the `r agreement_2+agreement_3_FN` (partially) missed statements were due to specific ways of writing (or not writing) the *p* value: `r keywords_ps` were missed because the *p* value was written as '$p_s$', and `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant *p* value. Excluding these two types of reporting, the overall agreement between the automated and manual approaches would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
+By manually reviewing 25 articles from Papercheck’s sample library, I identified `r agreement_1+agreement_2+agreement_3_FN` statements containing a nonsignificant *p* value. The automated RegEx search fully detected `r agreement_1` (`r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN)))` %) of these, and partially detected `r agreement_3_FN` due to extraction errors, often caused by PDF formatting (page breaks, figures, or footnotes). The search also produced `r agreement_3_FP` false positives - statements incorrectly labeled as coming from the results section, but actually originating from other sections, or from table or figure notes. Note, however, that most of the `r agreement_2+agreement_3_FN` (partially) missed statements were due to specific ways of writing (or not writing) the *p* value: `r keywords_ps` were missed because the *p* value was written as '$p_s$', and `r keywords_ns` were missed because the authors wrote 'n.s.' instead of the nonsignificant *p* value. Excluding these two types of reporting, the overall agreement between the automated and manual approaches would have been `r round(100*(agreement_1/(agreement_1+agreement_2+agreement_3_FN-keywords_ns-keywords_ps)))` %.
 
 Lastly, the remaining `r keywords_footnote+keywords_formatting+keywords_hallucination+keywords_character+keywords_pagebreak` missed statements were due to pdf formatting issues such as figures, tables, footnotes, page breaks, or unusual characters within the statement that interfered with the statement detection (`r keywords_footnote+keywords_formatting+keywords_character+keywords_pagebreak` in total).[^2]
 
@@ -446,7 +444,7 @@ tbl %>%
   flextable::theme_apa()
 ```
 
-@tbl-false-classification shows statements misclassified by all three models to illustrate common sources of difficulty. Potential causes of these misclassifications will be explored in the discussion. **ONCE I ADD IT**
+@tbl-false-classification shows statements misclassified by all three models to illustrate common sources of difficulty. Potential causes of these misclassifications will be explored in the discussion.
 
 ```{r}
 #| label: tbl-false-classification
@@ -527,9 +525,7 @@ n_1_incorrect_2.0  <- sum(llm_corrections_2.0$label == 1 & llm_corrections_2.0$c
 
 ## 3.3 Correction Evaluation
 
-Of the 100 statements that the LLM was instructed to correct `r n_correct_1.0` were evaluated as correct in the first iteration (initial prompt and older 'llama-3.3-70b-versatile' model). Notably, `r n_0_incorrect_1.0` of the 20 already correct statements were turned incorrect by the LLM, and `r n_1_incorrect_1.0` of the 80 incorrect statements remained incorrect. Using the newer 'openai/gpt-oss-120b' model, `r n_correct_1.1` statements were evaluated as correct. However, the model overused the 'NO CORRECTION POSSIBLE' option (originally intended to prevent detection errors) which resulted in `r n_0_not_corrected_1.1` correct and `r n_1_not_corrected_1.1` incorrect statements being left unrevised. In the final iteration, with the newer model and revised prompt, `r n_correct_2.0` of the 100 statements were correct. Of the remaining `r n_incorrect_2.0` statements, XXX were originally incorrect statement that remained incorrect, whereas the other YYY did not misinterpret nonsignificance but contained other problems: in one case, the LLM removed all *p* values and interpreted the effects as significant, and in another, it altered the statement's meaning substantially. Examples of both poor and strong LLM-revisions from this final iteration are shown in @tbl-LLM-corrections-1 and @tbl-LLM-corrections-2, respectively.
-
-**Above paragraph needs to be updated after discussion on how to code some of them with Daniel! Also need to update below tables after that**
+Of the 100 statements that the LLM was instructed to correct `r n_correct_1.0` were evaluated as correct in the first iteration (initial prompt and older 'llama-3.3-70b-versatile' model). Notably, `r n_0_incorrect_1.0` of the 20 already correct statements were turned incorrect by the LLM, and `r n_1_incorrect_1.0` of the 80 incorrect statements remained incorrect. Using the newer 'openai/gpt-oss-120b' model, `r n_correct_1.1` statements were evaluated as correct after LLM-revision. However, the model overused the 'NO CORRECTION POSSIBLE' option (originally intended to resolve possible detection errors) which resulted in `r n_0_not_corrected_1.1` correct and `r n_1_not_corrected_1.1` incorrect statements being left unrevised. In the final iteration, with the newer model and revised prompt, `r n_correct_2.0` of the 100 LLM-revised statements were correct. Of the remaining `r n_incorrect_2.0` statements, four (one originally correct and three incorrect) described the results as 'compatible with effects of exactly or around zero' - an interpretation that may be technically defensible, but still fails to adequately acknowledge the uncertainty in the test result. In one originally correct statement, the LLM removed all *p* values and described the effect as if they were significant. The remaining two were originally incorrect statements, one of which simply remained incorrect, while the other one was altered to the point that it no longer conveyed the original meaning (originally referring to model fit, which was not clear in the revision). Examples of both poor and strong LLM-revisions from this final iteration are shown in @tbl-LLM-corrections-1 and @tbl-LLM-corrections-2, respectively.
 
 ```{r}
 #| label: tbl-LLM-corrections-1
@@ -540,18 +536,14 @@ Of the 100 statements that the LLM was instructed to correct `r n_correct_1.0` w
 #| tbl-cap: Examples of Incorrect LLM-Revisions
 
 # Your selected example indices
-examples <- c(60, 80)
-
-# Fix 'ÃŽÂ²' in statements --> should be beta
-llm_corrections_2.0$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$statement)
-llm_corrections_2.0$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$corrected)
+examples <- c(74, 80)
 
 # Create long format table
 df_long <- map_dfr(examples, function(i) {
-  example_label <- paste0("Example ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
+  example_label <- paste0("From ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
   
   tibble(
-    Example = rep(example_label, 2),
+    Labels = rep(example_label, 2),
     `Statement Type` = c("Original", "LLM-revised"),
     Statement = c(llm_corrections_2.0$statement[i], llm_corrections_2.0$corrected[i]),
     Label = as.character(c(llm_corrections_2.0$label[i], llm_corrections_2.0$corrected_correct[i]))
@@ -562,11 +554,11 @@ df_long <- map_dfr(examples, function(i) {
 df_long %>%
   flextable() %>%
   flextable::theme_apa() %>%
-  merge_v(j = ~Example) %>%       # Merge vertical cells in the 'Example' column
-  valign(j = ~Example, val = "center") %>%  # Align merged cells at the top
+  merge_v(j = ~Labels) %>%       # Merge vertical cells in the 'Labels' column
+  valign(j = ~Labels, val = "center") %>%  # Align merged cells at the top
   line_spacing(j = c(1:3), space = 1.2) %>%  # Set line spacing in Statement column
   # fontsize(size = 9, part = "all") %>%
-  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
+  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Labels)
   width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
   width(j = 3, width = 4) %>%   # Column 3 (Statement)
   width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
@@ -582,7 +574,7 @@ df_long %>%
 #| tbl-cap: Examples of Correct LLM-Revisions
 
 # Your selected example indices
-examples <- c(10, 79)
+examples <- c(27, 11)
 
 # Fix 'ÃŽÂ²' in statements --> should be beta
 llm_corrections_2.0$statement <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections_2.0$statement)
@@ -590,10 +582,10 @@ llm_corrections_2.0$corrected <- gsub("ÃŽÂ²|ÃŽÂ²", "β", llm_corrections
 
 # Create long format table
 df_long <- map_dfr(examples, function(i) {
-  example_label <- paste0("Example ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
+  example_label <- paste0("From ", llm_corrections_2.0$label[i], " to ", llm_corrections_2.0$corrected_correct[i])
   
   tibble(
-    Example = rep(example_label, 2),
+    Labels = rep(example_label, 2),
     `Statement Type` = c("Original", "LLM-revised"),
     Statement = c(llm_corrections_2.0$statement[i], llm_corrections_2.0$corrected[i]),
     Label = as.character(c(llm_corrections_2.0$label[i], llm_corrections_2.0$corrected_correct[i]))
@@ -604,11 +596,11 @@ df_long <- map_dfr(examples, function(i) {
 df_long %>%
   flextable() %>%
   flextable::theme_apa() %>%
-  merge_v(j = ~Example) %>%       # Merge vertical cells in the 'Example' column
-  valign(j = ~Example, val = "center") %>%  # Align merged cells at the top
+  merge_v(j = ~Labels) %>%       # Merge vertical cells in the 'Labels' column
+  valign(j = ~Labels, val = "center") %>%  # Align merged cells at the top
   line_spacing(j = c(1:3), space = 1.2) %>%  # Set line spacing in Statement column
   # fontsize(size = 9, part = "all") %>%
-  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Example)
+  width(j = 1, width = 0.7) %>%   # Set width of column 1 (Labels)
   width(j = 2, width = 0.7) %>%   # Column 2 (Statement Type)
   width(j = 3, width = 4) %>%   # Column 3 (Statement)
   width(j = 4, width = 0.7) #%>%   # Column 4 (Label)
@@ -619,7 +611,7 @@ df_long %>%
 
 ## 4.1 Summary of Key Results
 
-This study developed and evaluated a three-step pipeline for automatically detecting, classifying and correcting misinterpretations of nonsignificant results as evidence for the absence of an effect. The pipeline combines (1) rule-based RegEx searches to identify candidate statements, (2) fine-tuned BERT models to classify them as correct or incorrect, and (3) LLMs to generate revised phrasings. Although clear areas for improvement emerged, each component performed well overall. This demonstrates the potential of hybrid, step-wise approaches for addressing persistent reporting issues in scientific writing, with applications beyond *p* value misinterpretations.
+In this study, I developed and evaluated a three-step pipeline for automatically detecting, classifying and correcting misinterpretations of nonsignificant results as evidence for the absence of an effect. The pipeline combines (1) rule-based RegEx searches to identify candidate statements, (2) fine-tuned BERT models to classify them as correct or incorrect, and (3) LLMs to generate revised phrasings. Although clear areas for improvement emerged, each component performed well overall. This demonstrates the potential of hybrid, step-wise approaches for addressing persistent reporting issues in scientific writing, with applications beyond *p* value misinterpretations.
 
 Each step contributes distinct strengths. The RegEx-based detection offers a fast, systematic, and transparent way of reducing the volume of text needing NLP-based analysis. The BERT classifiers, having been trained on human-annotated data, provide a reliable and powerful solution for identifying subtle language patterns. The final correction step, while optional, shows that LLMs can generate context-sensitive rewordings that may help authors revise problematic statements.
 
@@ -639,34 +631,27 @@ At the next step, the classification step performed strongly overall, but the us
 
 The standard BERT model consistently outperformed the more domain-specific SciBERT and PubMedBERT models, suggesting that this specialization might be hindering in this context. This difference could also be explained by the size of the models’ training datasets: BERT was trained on 3.3 billion words [@devlin_etal19], whereas SciBERT and PubMedBERT were trained on 3.17 billion tokens [words or word fragments\; @beltagy_etal19] and 3.1 billion words [@gu_etal22], respectively. BERT may therefore have achieved better results simply because its broader and larger training data allowed it to represent sentence structure more effectively. Of course, the difference could also stem from numerous other factors in the models’ training configurations. Future research should examine whether this performance gap persists across related tasks.
 
-Similarly, with respect to this study’s training data (articles from Psychological Science published between XXX and YYY), the findings should not be overgeneralized. While the trained BERT classifiers will likely detect misinterpretations in articles from other journals and time periods as well, the training dataset would nonetheless benefit from being expanded and diversified to cover a broader range of psychological research.
+Similarly, with respect to this study’s training data (articles from Psychological Science published between `r min_article_year` and `r max_article_year`), the findings should not be overgeneralized. While the trained BERT classifiers will likely detect misinterpretations in articles from other journals and time periods as well, the training dataset would nonetheless benefit from being expanded and diversified to cover a broader range of psychological research.
 
-While the standard BERT model performed well overall, it still misclassified edge cases, particularly statements containing both correct and incorrect elements. For example, ‘the difference was not significant, suggesting there is no effect’ combines a factual result with a problematic inference. As can be seen in @table_X, all three models often classified such statements wholly as correct. Similarly, if correct statement did not use the word ‘significant’ explicitly, models sometimes misclassified these as incorrect. This illustrates the difficulty of reducing nuanced writing to a binary label. Splitting statements into parts or using non-binary classification approaches might therefore be useful.
+While the standard BERT model performed well overall, it still misclassified edge cases, particularly statements containing both correct and incorrect elements. For example, ‘the difference was not significant, suggesting there is no effect’ combines a factual result with a problematic inference. As can be seen in @tbl-false-classification, all three models often classified such statements wholly as correct. Similarly, if correct statement did not use the word ‘significant’ explicitly, models sometimes misclassified these as incorrect. This illustrates the difficulty of reducing nuanced writing to a binary label. Splitting statements into parts or using non-binary classification approaches might therefore be useful.
 
 A more practical challenge involves managing models’ tradeoff between false positives and false negatives predictions. The current models aim to balance both for optimal macro performance (as seen in the results, this was not perfectly possible). However, in practice, different use cases may prioritize one over the other. For example, an individual researcher using the system to improve their writing may prefer fewer false negatives (i.e., catching as many problematic statements as possible), even at the cost of some false positives. Conversely, a meta-scientist analyzing prevalence trends of this misinterpretation may prioritize precision to avoid overestimating misinterpretations. This issue can be mitigated by allowing users to adjust the model's decision threshold for predicting one label or the other. A future Papercheck module based on this work could incorporate such functionality to fit users’ specific goals.
 
-Lastly, the correction stage revealed both opportunities and challenges. LLMs were able to propose helpful revisions, but, as shown in @table_2, they also turned already-correct statements incorrect or produced overly generic revisions. Providing them with more context (e.g., +/- one sentence or the full paragraph) might improve their ability to generate accurate and nuanced corrections.
+Lastly, the correction stage revealed both opportunities and challenges. LLMs were able to propose helpful revisions, but, as shown in @tbl-LLM-corrections-1, they also turned already-correct statements incorrect or produced overly generic revisions. Providing them with more context (e.g., +/- one sentence or the full paragraph) might improve their ability to generate accurate and nuanced corrections.
 
 However, there is also the flip side to the aforementioned human factors perspective: should authors rely on AI-generated corrections at all? Unlike grammar mistakes that word processors automatically fox for us, misinterpretations of statistical results often stem from deeper conceptual misunderstandings. Automated corrections might inadvertently encourage passivity, shifting responsibility away from researchers’ own critical engagement. In this sense, corrections should, if included at all, be seen as optional guidance, not authoritative replacements for careful reasoning.
 
 ## 4.3 Implications and Future Directions
 
-The pipeline described in this study will be integrated into a new Papercheck module for identifying potential misinterpretations of nonsignificant results. Some clear improvements have been detected through this study: Firstly, the current RegEx searches of Papercheck's ‘all_p_values’ module might not be optimized to detect all different ways in which a p values can be written. For example, the previously mentioned $p_s$ is often used to refer to the smallest p value in some collection of tests. This is an example of usually irrelevant RegEx's that I will add to improve this automatic detection of candidate statements. Additionally, the dataset used to train the BERT models will also be expanded and re-checked by independent coders to ensure that the aspects the models do pick up are generalizable. Lastly, mistakes from the correction validity check of statements' LLM-revised corrections will be closely analyzed to inform further prompt engineering to reduce any mistakes.
+The pipeline described in this study will be integrated into a new Papercheck module for identifying potential misinterpretations of nonsignificant results. Some clear aspects to improve have been detected in this study: Firstly, the current RegEx searches of Papercheck's ‘all_p_values’ module might not be optimized to detect all different ways in which a *p* values can be written. For example, the previously mentioned $p_s$ is often used to refer to the smallest *p* value in some collection of tests. This is an example of usually irrelevant RegEx's that I will add to improve this automatic detection of candidate statements. Additionally, the dataset used to train the BERT models will also be expanded and re-checked by independent coders to ensure that the aspects the models do pick up are generalizable. Lastly, mistakes from the correction validity check of statements' LLM-revised corrections will be closely analyzed to inform further prompt engineering to reduce any mistakes.
 
 A broader implication concerns how nonsignificant results should be reported in general. These interpretations are not free-form expressions that authors can adapt to suit their way of writing but rather formalized claims where certain phrasings are demonstrably misleading. Automated systems can support a shift toward clearer and more standardized reporting practices, but ultimately, researchers must recognize their own responsibility in this regard.
 
-This issue is closely connected to the broader question of why such misinterpretations, despite decades of critique, remain highly prevalent, a phenomenon likely driven by multiple factors. Educational gaps leave many students and researchers uncertain about how to interpret p values correctly, as instructors may share the same misconceptions [@haller_etal02] or textbooks may themselves misrepresent key statistical concepts [@cassidy_etal19]. Similarly, researchers might have different philosophies of science and might disagree about how to interpret key statistics like the *p* value [@lakens21]. Finally, the widespread prevalence of misinterpretations creates a self-reinforcing cycle, with researchers adopting the language they encounter in published articles and thereby perpetuating the problem. Automated feedback systems cannot resolve these deeper causes, but they may, for now, assist individual authors by highlighting such mistakes in their own work.
+This issue is closely connected to the broader question of why such misinterpretations, despite decades of critique, remain highly prevalent, a phenomenon likely driven by multiple factors. Educational gaps leave many students and researchers uncertain about how to interpret *p* values correctly, as instructors may share the same misconceptions [@haller_krauss02] or textbooks may themselves misrepresent key statistical concepts [@cassidy_etal19]. Similarly, researchers might have different philosophies of science and might disagree about how to interpret key statistics like the *p* value [@lakens21]. Finally, the widespread prevalence of misinterpretations itself creates a self-reinforcing cycle, with researchers adopting the language they encounter in published articles and thereby perpetuating the problem. Automated feedback systems cannot resolve these deeper causes, but they may, for now, assist individual authors by highlighting such mistakes in their own work.
 
-**--> Add paragraph about the following here:- How this might be used for other things misinterpretations and meta science- example of tessas thesis- user studies- check out old 4.3 section for this<--**
+Additionally, the pipeline’s step-wise structure makes it easy to adapt to other classification or correction tasks than the one presented in this study. For instance, users could train custom classifiers to detect different issues in reporting practices [see @vanabkoude25 for an application to problematic causal language]. In practice, this would involve specifying RegEx patterns that capture the target aspects, training classifiers to label them as correct or incorrect, and, if desired, creating a prompt to generate corrections. Depending on the issue at hand, such classifiers could also be trained on existing hand-labeled datasets from meta-scientific studies where researchers coded specific practices or mistakes [e.g., @aczel_etal18].
 
-**[OLD 4.3 HERE:]**
-The pipeline described in this study will be integrated into a new Papercheck module for identifying potential misinterpretations of nonsignificant results. Some clear improvements have been noticed through this study: Firstly, the current RegEx searches of Papercheck's "all_p_values" module might not be optimized to detect all different ways in which a p values can be written, e.g., the previously mentioned $p_s$ is often used to refer to the smallest p value in some collection of tests. This is an example of usually irrelevant RegEx's that I will add to improve this automatic detection of candidate statements. Additionally, the dataset used to train the BERT models will also be expanded and re-checked by independent coders to ensure that the aspects the models do pick up are generalizable. Lastly, mistakes from the correction validity check of statements' LLM-revised corrections will be closely analyzed to inform further prompt engineering to reduce any mistakes.
-
-Importantly, the pipeline’s step-wise structure makes it easy to adapt to other classification or correction tasks. For instance, users could train custom classifiers to detect different issues in reporting practices [see @vanabkoude25 for an application to problematic causal language]. In practice, this would involve specifying RegEx patterns that capture the target aspects, training classifiers to label them as correct or incorrect, and, if desired, creating a prompt to generate corrections. Depending on the issue of interest, such classifiers could also be trained on existing hand-labeled datasets from meta-scientific studies where researchers coded specific practices or mistakes [e.g., @aczel_etal18].
-
-Going forward, an important next step will be conducting qualitative user studies to explore how authors would prefer such a tool to be designed and implemented. A central question will be the role of the optional correction feature - whether authors find value in receiving suggested corrections or whether simple flagging is sufficient. These studies could also reveal where customization is most useful (e.g., varying levels of strictness, setting a personal alpha level instead of the conventional 5%, etc.). In addition, experimental evaluations would help assess whether the tool reduces the prevalence of misinterpretations and increases authors’ awareness of them.
-
---> Add to zotero: Cassidy_etal19 SA, Dimova R, Giguère B, Spence JR, Stanley DJ. 2019 Failing grade: 89% of introduction-to-psychology textbooks that define or explain statistical significance do so incorrectly. Adv. Methods Pract. Psychol. Sci. 2, 233–239. (doi:10.1177/2515245919858072) <--
+Finally, the most important next step for this project will be conducting qualitative user studies to explore how authors would prefer a tool this to be designed and implemented. A central question will, again, be the role of the optional correction feature - whether authors find value in receiving suggested corrections or whether simple flagging is sufficient. These studies could also reveal where customization is most useful (e.g., varying levels of strictness, setting a personal alpha level instead of the conventional 5%, etc.). In addition, experimental evaluations would help assess whether the tool reduces the prevalence of misinterpretations and increases authors’ awareness of them.
 
 # 5 Conclusion
 
