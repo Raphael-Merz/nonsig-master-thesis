@@ -1,4 +1,4 @@
-# From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant p Values
+# From Detection to Correction: A Hybrid NLP Approach to Misinterpretations of Nonsignificant *p* Values
 
 This repository contains the code, data, and documentation for my master’s thesis project. The goal of this project is to develop a pipeline that automatically **detects**, **classifies**, and **corrects** common misinterpretations of nonsignificant p-values (e.g., "p > .05 = no effect").
 
