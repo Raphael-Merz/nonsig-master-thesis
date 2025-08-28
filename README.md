@@ -70,7 +70,7 @@ notebooks/
 │   ├── archive/                   # Archived versions of classifiers
 │   ├── best_model/                # Best model checkpoint for BERT, SciBERT, PubMedBERT
 │   ├── results/                   # Epoch-by-epoch models; best moved to 'best_model/' after evaluation
-│                                   (intermediate checkpoints deleted to save space)
+│                                    (intermediate checkpoints deleted to save space)
 ├── r/                             # Quarto markdown scripts for dataset creation and preprocessing
 
 thesis/                             # Thesis manuscript and related files
