@@ -37,15 +37,15 @@ python -m ipykernel install --user --name nonsig_kernel
 
 ### Open and run notebooks in Visual Studio Code
 
-1. Install [Visual Studio Code](https://code.visualstudio.com/).
+1. Install [**Visual Studio Code**](https://code.visualstudio.com/).
 
-2. Install the Python and Jupyter extensions from the VS Code Extensions Marketplace.
+2. Install the Python and Jupyter extensions from the **VS Code Extensions Marketplace**.
 
 3. Open the repository folder (nonsig-master-thesis) in VS Code.
 
-4. Open one of the notebooks in notebooks/python/.
+4. Open one of the notebooks in `notebooks/python/`.
 
-5. In the top-right of the windwo, first click 'Select Kernal'. Then choose 'Jupyter Kernel...' and finally select the kernel you created earlier: 'nonsig_kernel'.
+5. In the top-right of the windwo, first click 'Select Kernel'. Then choose 'Jupyter Kernel...' and finally select the kernel you created earlier: `nonsig_kernel`.
 
 → You can now run the notebooks cell by cell inside VS Code.
 
