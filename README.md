@@ -46,6 +46,7 @@ Here are two straight forward ways to get the repository onto your machine:
 
 Instructions for setting up the Python virtual environment needed to run the scripts can be found in  
 `notebooks/python/README.md`.
+
 ---
 
 ## 📁 Repository Structure
