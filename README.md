@@ -39,7 +39,7 @@ Here are two straight forward ways to get the repository onto your machine:
 
 2. Click the green **Code** button → **Download ZIP**.
 
-3. Unzip the file in a location of your choice.
+3. **Unzip** the file in a location of your choice.
 
 → You now have the repository files locally (but without version control).
 
