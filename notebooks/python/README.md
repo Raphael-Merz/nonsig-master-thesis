@@ -55,7 +55,7 @@ python -m ipykernel install --user --name nonsig_kernel
 
 If you have an NVIDIA GPU, you can speed up model training by installing CUDA 12.9:
 
-👉 *[Download CUDA 12.9 here](https://developer.nvidia.com/cuda-12-9-0-download-archive)*
+👉 [**Download CUDA 12.9 here**](https://developer.nvidia.com/cuda-12-9-0-download-archive)
 
 - Make sure your GPU is compatible.
 
