@@ -47,7 +47,7 @@ python -m ipykernel install --user --name nonsig_kernel
 
 5. In the top-right of the windwo, first click 'Select Kernal'. Then choose 'Jupyter Kernel...' and finally select the kernel you created earlier: 'nonsig_kernel'.
 
---> You can now run the notebooks cell by cell inside VS Code.
+→ You can now run the notebooks cell by cell inside VS Code.
 
 ---
 

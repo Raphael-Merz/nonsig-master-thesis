@@ -31,7 +31,7 @@ Here are two straight forward ways to get the repository onto your machine:
 
 5. Click Clone.
 
---> Now you’ll have a synchronized local copy of the repository.
+→ Now you’ll have a synchronized local copy of the repository.
 
 ### Option B – Download as ZIP
 
@@ -41,7 +41,7 @@ Here are two straight forward ways to get the repository onto your machine:
 
 3. Unzip the file in a location of your choice.
 
--> You now have the repository files locally (but without version control).
+→ You now have the repository files locally (but without version control).
 
 ### 🐍 Python Integration
 
