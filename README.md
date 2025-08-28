@@ -89,7 +89,7 @@ thesis/                             # Thesis manuscript and related files
 
 **Raphael Merz**  
 Ruhr University Bochum  
-📧 Raphael.Merz@rub.de  
+📧 Raphael.Merz[at]rub.de  
 ORCID: 0000-0002-9474-3379  
 
 If you use this project or the data, please consider citing it or getting in touch.
