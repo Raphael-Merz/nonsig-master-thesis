@@ -11,8 +11,42 @@ Researchers often misinterpret nonsignificant results as evidence for the absenc
 
 - **Detection**: Via Regular Expression (RegEx) searches implemented in the [`papercheck`](https://scienceverse.github.io/papercheck/) R package
 - **Classification**: Using BERT-based classifiers to determine whether a statement correctly interprets a nonsignificant result
-- **Detection and Correction**: Querying LLMs for corrected alternatives through [`papercheck`](https://scienceverse.github.io/papercheck/).
+- **Detection and Correction**: Querying LLMs for corrected alternatives through [`papercheck`](https://scienceverse.github.io/papercheck/)
 
+---
+
+## 🚀 How to Use This Repository
+
+Here are two straight forward ways to get the repository onto your machine:
+
+### Option A – Clone with GitHub Desktop
+
+1. Install [GitHub Desktop](https://github.com/apps/desktop).
+
+2. In your browser, open this repository.
+
+3. Click the green *Code* button → *Open with GitHub Desktop*.
+
+4. Choose a local folder where you want to save the project.
+
+5. Click Clone.
+
+--> Now you’ll have a synchronized local copy of the repository.
+
+### Option B – Download as ZIP
+
+1. In your browser, open this repository.
+
+2. Click the green *Code* button → *Download ZIP*.
+
+3. Unzip the file in a location of your choice.
+
+--> You now have the repository files locally (but without version control).
+
+### 🐍 Python Integration
+
+Instructions for setting up the Python virtual environment needed to run the scripts can be found in  
+`notebooks/python/README.md`.
 ---
 
 ## 📁 Repository Structure
@@ -24,14 +58,15 @@ data/
 │   ├── detection_checked.xlsx     # Statements detected automatically + manually, for comparison
 │   ├── detection_unchecked.xlsx   # Only automatically detected statements
 ├── llm_correction_check/          # Spreadsheets for LLM-correction validity checks 
-│                                   (original statements, LLM revisions, manual label of correctness)
+│                                    (original statements, LLM revisions, manual label of correctness)
 ├── model_performance/             # Classifier training results (confusion matrices, loss curves, etc.)
 ├── training_data/                 
 │   ├── labeled/                   # Classifier training data (statements + manual labels) and annotation notes
 │   ├── unlabeled/                 # Statements without labels
 
 notebooks/
-├── python/                        # Jupyter notebooks to train/evaluate BERT models
+├── python/                        # Jupyter notebooks to train/evaluate BERT models;
+│                                    Instructions on how to set up the Python environment
 │   ├── archive/                   # Archived versions of classifiers
 │   ├── best_model/                # Best model checkpoint for BERT, SciBERT, PubMedBERT
 │   ├── results/                   # Epoch-by-epoch models; best moved to 'best_model/' after evaluation
