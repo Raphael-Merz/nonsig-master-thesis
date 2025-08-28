@@ -41,7 +41,7 @@ Here are two straight forward ways to get the repository onto your machine:
 
 3. Unzip the file in a location of your choice.
 
---> You now have the repository files locally (but without version control).
+-> You now have the repository files locally (but without version control).
 
 ### 🐍 Python Integration
 
