@@ -83,7 +83,7 @@ thesis/                             # Thesis manuscript and related files
 ## 📄 License
 
 - 📄 Code and documentation: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-- 📊 Data: Reused under fair use from open-access sources (details in thesis)
+- 📊 Data/Articles: Reused under fair use from open-access sources (details in thesis)
 
 ## 👤 Contact Info
 
